@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/igdb")
 public class IGDBController {
 
@@ -23,8 +24,7 @@ public class IGDBController {
 
     @GetMapping("/cover/{cover_id}")
     public String getCover(@PathVariable("cover_id") String coverID) throws UnirestException {
-        String coverUrl = igdbService.getCoverArt(coverID);
 
-        return coverUrl;
+        return igdbService.getCoverArt(coverID);
     }
 }

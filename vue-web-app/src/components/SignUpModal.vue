@@ -73,7 +73,7 @@ export default {
         body: postData,
       };
 
-      const response = await fetch( "http://localhost:8080/api/auth/signup", requestOptions);
+      const response = await fetch( "http://localhost:4040/api/auth/signup", requestOptions);
       const data = await response.json();
       alert(data.message)
       this.$emit("closeModal")
@@ -83,6 +83,7 @@ export default {
 </script>
 
 <style scoped>
+
 .backdrop {
   top: 0;
   position: fixed;

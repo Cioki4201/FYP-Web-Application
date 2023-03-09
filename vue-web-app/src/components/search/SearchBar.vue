@@ -9,15 +9,19 @@
     <button @click="search" class="search-button">Search</button>
   </div>
 
-  <SearchResults :games="searchResult" :imagesFetched="imagesFetched" :searching="searching"/>
+  <SearchResults
+    :games="searchResult"
+    :imagesFetched="imagesFetched"
+    :searching="searching"
+  />
 </template>
   
 <script>
-import SearchResults from "./SearchResults.vue"
+import SearchResults from "./SearchResults.vue";
 
 export default {
   components: {
-    SearchResults
+    SearchResults,
   },
 
   data() {
@@ -36,23 +40,26 @@ export default {
       console.log(
         "Performing search for:",
         "http://localhost:4040/api/igdb/search/" + this.searchText
-      )
+      );
 
       const response = await fetch(
         "http://localhost:4040/api/igdb/search/" + this.searchText
-      )
+      );
       const games = await response.json();
 
       this.searchResult = games;
 
-      for (let i = 0; i < games.length; i++) {
-        const coverResponse = await fetch(
-          "http://localhost:4040/api/igdb/cover/" + games[i].cover
-        )
+      // if a game does not have a cover ID remove it from the list
+      this.searchResult = this.searchResult.filter((game) => game.cover);
 
-        const coverUrl = await coverResponse.text();
-        games[i].coverUrl = coverUrl;
-      }
+      const coverUrls = await Promise.all(
+        games.map((game) =>
+          fetch("http://localhost:4040/api/igdb/cover/" + game.cover).then(
+            (response) => response.text()
+          )
+        )
+      );
+      games.forEach((game, i) => (game.coverUrl = coverUrls[i]));
 
       this.imagesFetched = true;
       this.searching = false;

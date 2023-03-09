@@ -23,12 +23,15 @@ public class IGDBService implements IGDBRepo {
 
     @Override
     public String getCoverArt(String artID) throws UnirestException {
-        String query = "where id = " + artID + "; fields *;";
-        JSONArray returnBody = request.post(query, "covers");
+        try {
+            String query = "where id = " + artID + "; fields *;";
+            JSONArray returnBody = request.post(query, "covers");
 
-        JSONObject artObject = new JSONObject(returnBody.get(0).toString());
-        String artUrl = "https://images.igdb.com/igdb/image/upload/t_cover_big/" + artObject.get("image_id") + ".jpg";
+            JSONObject artObject = new JSONObject(returnBody.get(0).toString());
+            return "https://images.igdb.com/igdb/image/upload/t_cover_big/" + artObject.get("image_id") + ".jpg";
+        } catch (Exception e) { // if no cover art is found return default image
+            return "https://publications.iarc.fr/uploads/media/default/0001/02/thumb_1205_default_publication.jpeg";
+        }
 
-        return artUrl;
     }
 }

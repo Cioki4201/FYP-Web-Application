@@ -24,7 +24,6 @@ public class IGDBController {
 
     @GetMapping("/cover/{cover_id}")
     public String getCover(@PathVariable("cover_id") String coverID) throws UnirestException {
-
         return igdbService.getCoverArt(coverID);
     }
 }

@@ -1,10 +1,16 @@
 <template>
   <div>
     <div v-if="imagesFetched && !searching">
-      <div v-for="game in games" :key="game.name" class="gameCard">
-        <h3>{{game.name}}</h3>
-        <img :src="game.coverUrl" @error="$event.target.src='https://publications.iarc.fr/uploads/media/default/0001/02/thumb_1205_default_publication.jpeg'"/>
-      </div>
+      <v-container>
+        <v-row>
+          <v-col v-for="game in games" :key="game.name" cols="12" sm="6" md="4" lg="3">
+            <v-card>
+              <v-img :src="game.coverUrl"/>
+              <v-card-title>{{game.name}}</v-card-title>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </div>
     <div v-if="searching">
       <div class="loader" v-if="!imagesFetched">
@@ -19,41 +25,13 @@ export default {
   data() {
     return {};
   },
-  methods: {},
+  methods: {
+    
+  },
 };
 </script>
 
 <style>
-.gameCard {
-  display: inline-block;
-  width: 18%;
-  margin: 10px;
-  border-radius: 20px;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-  transition: 0.3s;
-  padding: 1%;
-  background-color: #ffe3e3;
-}
-
-/* make the image responsive */
-.gameCard img {
-  width: auto;
-  height: 100%;
-  border-radius: 20px;
-  border: #ffacac 7px solid;
-}
-
-/* when the mouse hovers over the card, add an effect */
-.gameCard:hover {
-  box-shadow: 0 8px 16px 0 rgba(255, 0, 0, 0.4);
-  cursor: pointer;
-  background-color: #ff5656;
-}
-
-/* when the mouse hovers over the card, add an effect */
-.gameCard:hover img{
-  border: #d55b5b 7px solid;
-}
 
 
 

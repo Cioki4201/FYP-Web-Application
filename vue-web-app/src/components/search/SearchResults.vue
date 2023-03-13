@@ -4,7 +4,7 @@
       <v-container>
         <v-row>
           <v-col v-for="game in games" :key="game.name" cols="12" sm="6" md="4" lg="3">
-            <v-card>
+            <v-card @click="goToGamePage(game.id)">
               <v-img :src="game.coverUrl"/>
               <v-card-title>{{game.name}}</v-card-title>
             </v-card>
@@ -19,28 +19,29 @@
   </div>
 </template>
 
+
 <script>
 export default {
   props: ["games", "imagesFetched", "searching"],
+
   data() {
     return {};
   },
+
   methods: {
-    
+    goToGamePage(gameId) {
+      this.$router.push({path: `/game/${gameId}`})
+    }
   },
 };
 </script>
 
+
 <style>
-
-
-
-/* Loading Icon if Images not fetched */
 .loader {
-  /* center the icon */
   margin : 5% auto;
-  border: 16px solid #f3f3f3; /* Light grey */
-  border-top: 16px solid #3498db; /* Blue */
+  border: 16px solid #f3f3f3;
+  border-top: 16px solid #3498db;
   border-radius: 50%;
   width: 40px;
   height: 40px;

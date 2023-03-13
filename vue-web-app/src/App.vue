@@ -21,7 +21,7 @@
     <v-toolbar app>
       <!-- Toolbar navigation -->
       <span class="hidden-sm-and-up">
-        <v-toolbar-side-icon @click="sidebar = !sidebar"> </v-toolbar-side-icon>
+        <v-app-bar-nav-icon @click="sidebar = !sidebar"> </v-app-bar-nav-icon>
       </span>
       <v-toolbar-title>
         <router-link to="/" style="cursor: pointer">

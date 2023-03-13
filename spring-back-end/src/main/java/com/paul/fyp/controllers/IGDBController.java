@@ -3,6 +3,7 @@ package com.paul.fyp.controllers;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.paul.fyp.services.IGDBService;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,8 +23,17 @@ public class IGDBController {
         return searchResult.toString();
     }
 
+    // RETURNS THE GAME COVER ART FOR A GIVEN COVER ID
     @GetMapping("/cover/{cover_id}")
     public String getCover(@PathVariable("cover_id") String coverID) throws UnirestException {
         return igdbService.getCoverArt(coverID);
+    }
+
+    // RETURNS ALL INFORMATION FOR A GIVEN GAME ID
+    @GetMapping("/game/{game_id}")
+    public String getGameInfo(@PathVariable("game_id") String gameID) throws UnirestException {
+        JSONObject gameInfo = igdbService.getGameInfo(gameID);
+
+        return gameInfo.toString();
     }
 }

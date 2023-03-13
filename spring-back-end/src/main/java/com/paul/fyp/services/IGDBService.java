@@ -34,4 +34,73 @@ public class IGDBService implements IGDBRepo {
         }
 
     }
+
+    @Override
+    public JSONObject getGameInfo(String gameID) throws UnirestException {
+        String query = "where id = " + gameID + "; fields name, cover, storyline, summary, rating, rating_count, platforms, first_release_date, websites, similar_games;";
+        JSONArray returnBody = request.post(query, "games");
+        JSONObject gameInfo = new JSONObject(returnBody.get(0).toString());
+
+        JSONObject res = new JSONObject();
+
+        res.put("id", gameInfo.get("id"));
+        res.put("name", gameInfo.get("name"));
+
+        try {
+            res.put("storyline", gameInfo.get("storyline"));
+        } catch (Exception e) {
+            res.put("storyline", "No storyline available");
+        }
+
+        res.put("summary", gameInfo.get("summary"));
+        res.put("rating", gameInfo.get("rating"));
+        res.put("rating_count", gameInfo.get("rating_count"));
+
+        res.put("coverUrl", getCoverArt(gameInfo.get("cover").toString()));
+
+        // PLATFORMS
+
+        JSONArray platforms = gameInfo.getJSONArray("platforms");
+        JSONArray platformNames = new JSONArray();
+        for (Object platform : platforms) {
+            String platformQuery = "where id = " + platform.toString() + "; fields name;";
+            JSONArray platformInfo = request.post(platformQuery, "platforms");
+            JSONObject platformObj = new JSONObject(platformInfo.get(0).toString());
+            platformNames.put(platformObj.get("name"));
+        }
+        res.put("platforms", platformNames);
+
+        // RELEASE DATE
+
+        long unixTime = Long.parseLong(gameInfo.get("first_release_date").toString());
+        java.util.Date time = new java.util.Date(unixTime * 1000);
+        String releaseDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(time);
+        res.put("releaseDate", releaseDate);
+
+        // SIMILAR GAMES
+
+        JSONArray similarGames = gameInfo.getJSONArray("similar_games");
+        JSONArray similarGameNames = new JSONArray();
+        for (Object similarGame : similarGames) {
+            String similarGameQuery = "where id = " + similarGame.toString() + "; fields name;";
+            JSONArray similarGameInfo = request.post(similarGameQuery, "games");
+            JSONObject similarGameObj = new JSONObject(similarGameInfo.get(0).toString());
+            similarGameNames.put(similarGameObj);
+        }
+        res.put("similarGames", similarGameNames);
+
+        // WEBSITES
+
+        JSONArray websites = gameInfo.getJSONArray("websites");
+        JSONArray websiteUrls = new JSONArray();
+        for (Object website : websites) {
+            String websiteQuery = "where id = " + website.toString() + "; fields url;";
+            JSONArray websiteInfo = request.post(websiteQuery, "websites");
+            JSONObject websiteObj = new JSONObject(websiteInfo.get(0).toString());
+            websiteUrls.put(websiteObj.get("url"));
+        }
+        res.put("websites", websiteUrls);
+
+        return res;
+    }
 }

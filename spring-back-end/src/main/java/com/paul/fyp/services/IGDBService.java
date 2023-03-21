@@ -8,6 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 @Service
 public class IGDBService implements IGDBRepo {
 
@@ -43,6 +46,7 @@ public class IGDBService implements IGDBRepo {
 
         JSONObject res = new JSONObject();
 
+
         res.put("id", gameInfo.get("id"));
         res.put("name", gameInfo.get("name"));
 
@@ -72,48 +76,86 @@ public class IGDBService implements IGDBRepo {
 
         res.put("coverUrl", getCoverArt(gameInfo.get("cover").toString()));
 
-        // PLATFORMS
+        // =========================== PLATFORMS ===========================
 
-        JSONArray platforms = gameInfo.getJSONArray("platforms");
-        JSONArray platformNames = new JSONArray();
-        for (Object platform : platforms) {
-            String platformQuery = "where id = " + platform.toString() + "; fields name;";
-            JSONArray platformInfo = request.post(platformQuery, "platforms");
-            JSONObject platformObj = new JSONObject(platformInfo.get(0).toString());
-            platformNames.put(platformObj.get("name"));
-        }
-        res.put("platforms", platformNames);
+        CompletableFuture<JSONArray> platformNamesFuture = CompletableFuture.supplyAsync(() -> {
+            JSONArray platforms = gameInfo.getJSONArray("platforms");
+            JSONArray platformNames = new JSONArray();
 
-        // RELEASE DATE
+            for (Object platform : platforms) {
+                String platformQuery = "where id = " + platform.toString() + "; fields name;";
+                JSONArray platformInfo = null;
+
+                try {
+                    platformInfo = request.post(platformQuery, "platforms");
+                } catch (UnirestException e) {throw new RuntimeException(e);}
+
+                JSONObject platformObj = new JSONObject(platformInfo.get(0).toString());
+                platformNames.put(platformObj.get("name"));
+            }
+
+            return platformNames;
+        });
+
+        // =============================== RELEASE DATE ===============================
 
         long unixTime = Long.parseLong(gameInfo.get("first_release_date").toString());
         java.util.Date time = new java.util.Date(unixTime * 1000);
         String releaseDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(time);
         res.put("releaseDate", releaseDate);
 
-        // SIMILAR GAMES
+        // =============================== SIMILAR GAMES ===============================
 
-        JSONArray similarGames = gameInfo.getJSONArray("similar_games");
-        JSONArray similarGameNames = new JSONArray();
-        for (Object similarGame : similarGames) {
-            String similarGameQuery = "where id = " + similarGame.toString() + "; fields name;";
-            JSONArray similarGameInfo = request.post(similarGameQuery, "games");
-            JSONObject similarGameObj = new JSONObject(similarGameInfo.get(0).toString());
-            similarGameNames.put(similarGameObj);
-        }
-        res.put("similarGames", similarGameNames);
+        CompletableFuture<JSONArray> similarGameNamesFuture = CompletableFuture.supplyAsync(() -> {
+            JSONArray similarGames = gameInfo.getJSONArray("similar_games");
+            JSONArray similarGameNames = new JSONArray();
 
-        // WEBSITES
+            // Create a comma-separated list of similar game IDs for a single query
+            String similarGameIds = String.join(",", similarGames.toList().stream().map(Object::toString).collect(Collectors.toList()));
 
-        JSONArray websites = gameInfo.getJSONArray("websites");
-        JSONArray websiteUrls = new JSONArray();
-        for (Object website : websites) {
-            String websiteQuery = "where id = " + website.toString() + "; fields url;";
-            JSONArray websiteInfo = request.post(websiteQuery, "websites");
-            JSONObject websiteObj = new JSONObject(websiteInfo.get(0).toString());
-            websiteUrls.put(websiteObj.get("url"));
-        }
-        res.put("websites", websiteUrls);
+            // Modify the query to request information for all similar games at once
+            String similarGameQuery = "where id = (" + similarGameIds + "); fields name;";
+
+            try {
+                JSONArray similarGameInfo = request.post(similarGameQuery, "games");
+
+                for (int i = 0; i < similarGameInfo.length(); i++) {
+                    JSONObject similarGameObj = similarGameInfo.getJSONObject(i);
+                    similarGameNames.put(similarGameObj);
+                }
+            } catch (UnirestException e) {
+                throw new RuntimeException(e);
+            }
+
+            return similarGameNames;
+        });
+
+        // =============================== WEBSITES ===============================
+
+        CompletableFuture<JSONArray> websiteUrlsFuture = CompletableFuture.supplyAsync(() -> {
+            JSONArray websites = gameInfo.getJSONArray("websites");
+            JSONArray websiteUrls = new JSONArray();
+            for (Object website : websites) {
+                String websiteQuery = "where id = " + website.toString() + "; fields url;";
+                JSONArray websiteInfo = null;
+
+                try {
+                    websiteInfo = request.post(websiteQuery, "websites");
+                } catch (UnirestException e) {throw new RuntimeException(e);}
+
+                JSONObject websiteObj = new JSONObject(websiteInfo.get(0).toString());
+                websiteUrls.put(websiteObj.get("url"));
+            }
+
+            return websiteUrls;
+        });
+
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(platformNamesFuture, similarGameNamesFuture, websiteUrlsFuture);
+        allFutures.join();
+
+        res.put("platforms", platformNamesFuture.join());
+        res.put("similarGames", similarGameNamesFuture.join());
+        res.put("websites", websiteUrlsFuture.join());
 
         return res;
     }

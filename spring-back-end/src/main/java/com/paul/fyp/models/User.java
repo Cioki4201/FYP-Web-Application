@@ -1,6 +1,8 @@
 package com.paul.fyp.models;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.validation.constraints.Email;
@@ -40,6 +42,10 @@ public class User {
   @DBRef
   private Set<Role> roles = new HashSet<>();
 
+  // Game Categories: 0 = Want to Play, 1 = Playing, 2 = Completed, 3 = Dropped, 4 = On Hold
+  private List<List<String>> games = new ArrayList<List<String>>();
+
+
   public User() {
   }
 
@@ -49,6 +55,10 @@ public class User {
     this.password = password;
     this.firstName = firstName;
     this.lastName = lastName;
+
+    for (int i = 0; i < 5; i++) {
+      games.add(new ArrayList<String>());
+    }
   }
 
   public String getId() {
@@ -106,4 +116,28 @@ public class User {
   public void setRoles(Set<Role> roles) {
     this.roles = roles;
   }
+
+
+  // ==================== Game Methods ====================
+  public void addGame(String gameID, int category) {
+    // Add game to specified category
+    games.get(category).add(gameID);
+  }
+
+  // Find if game is in any category and return the category
+  public int findGame(String gameID) {
+      for (int i = 0; i < 5; i++) {
+      if (games.get(i).contains(gameID)) {
+          return i;
+      }
+    }
+    return -1;
+  }
+
+  // Move game from one category to another
+  public void moveGame(String gameID, int from, int to) {
+      games.get(from).remove(gameID);
+      games.get(to).add(gameID);
+  }
+
 }

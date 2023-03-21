@@ -1,33 +1,62 @@
 <template>
   <div v-if="dataLoaded">
-    <h1>{{ gameDetails.name }}</h1> <br>
-	<v-img :src="gameDetails.coverUrl" width="200px"/> <br>
+    <h1>{{ gameDetails.name }}</h1>
+    <br />
+    <v-img :src="gameDetails.coverUrl" width="200px" /> <br />
 
-	<h3>Storyline</h3>
-	<p>{{ gameDetails.storyline }}</p> <br>
+    <!-- Add Game to MyList -->
+    <v-menu>
+      <template v-slot:activator="{ props }">
+        <v-btn
+          color="primary"
+          v-bind="props"
+        >
+          Add Game to MyList
+        </v-btn>
+      </template>
+      <v-list>
+        <v-list-item
+          v-for="(item, index) in menuItems"
+          :key="index"
+          :value="index"
+        >
+          <v-list-item-title @click="addGameToMyList(item.value)">{{ item.label }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
 
-	<h3>Summary</h3>
-	<p>{{ gameDetails.summary }}</p> <br>
+    <h3>Storyline</h3>
+    <p>{{ gameDetails.storyline }}</p>
+    <br />
 
-	<h3>Rating</h3>
-	<p>{{ gameDetails.rating }}</p> <br>
+    <h3>Summary</h3>
+    <p>{{ gameDetails.summary }}</p>
+    <br />
 
-	<h3>Rating Count</h3>
-	<p>{{ gameDetails.rating_count }}</p> <br>
+    <h3>Rating</h3>
+    <p>{{ gameDetails.rating }}</p>
+    <br />
 
-	<h3>Platforms</h3>
-	<p>{{ gameDetails.platforms }}</p> <br>
+    <h3>Rating Count</h3>
+    <p>{{ gameDetails.rating_count }}</p>
+    <br />
 
-	<h3>Release Date</h3>
-	<p>{{ gameDetails.releaseDate }}</p> <br>
+    <h3>Platforms</h3>
+    <p>{{ gameDetails.platforms }}</p>
+    <br />
 
-	<h3>Websites</h3>
-	<p>{{ gameDetails.websites }}</p> <br>
+    <h3>Release Date</h3>
+    <p>{{ gameDetails.releaseDate }}</p>
+    <br />
 
-	<h3>Similar Games</h3>
-	<div v-for="game in gameDetails.similarGames" :key="game.id">
-		<h4 @click="goToGamePage(game.id)">{{ game.name }}</h4>
-	</div>
+    <h3>Websites</h3>
+    <p>{{ gameDetails.websites }}</p>
+    <br />
+
+    <h3>Similar Games</h3>
+    <div v-for="game in gameDetails.similarGames" :key="game.id">
+      <h4 @click="goToGamePage(game.id)" id="similarGame">{{ game.name }}</h4>
+    </div>
   </div>
 
   <div v-else>
@@ -47,6 +76,14 @@ export default {
       gameDetails: null, // game details promise results
 
       dataLoaded: false,
+
+      menuItems: [
+        { value: 0, label: "Want To Play" },
+        { value: 1, label: "Playing" },
+        { value: 2, label: "Completed" },
+        { value: 3, label: "Dropped" },
+        { value: 4, label: "On Hold" },
+      ],
     };
   },
 
@@ -60,30 +97,77 @@ export default {
       return game;
     },
 
-	async getGameInfo() {
-		const response = await fetch(
-		  "http://localhost:4040/api/igdb/game/" + this.gameID
-		);
-		const game = await response.json();
-		return game;
-	},
+    async getGameInfo() {
+      const response = await fetch(
+        "http://localhost:4040/api/igdb/game/" + this.gameID
+      );
+      const game = await response.json()
+      return game;
+    },
 
-	// method that reloads page
-	goToGamePage(gameId) {
-      this.$router.push({path: `/game/${gameId}`})
-	  setTimeout(function() { window.location.reload() }, 10)
+    // method that reloads page
+    goToGamePage(gameId) {
+      this.$router.push({ path: `/game/${gameId}` })
+      setTimeout(function () {
+        window.location.reload()
+      }, 10);
+    },
+
+    // method that adds game to current user's game list
+    async addGameToMyList(listIndex) {
+      // Get the current user's username from the session storage
+      if (localStorage.getItem("signInObj") == null) {
+        alert("Please sign in to add games to your list.")
+        return;
+      } 
+      else {
+        let currentUser = localStorage.getItem("signInObj")
+        currentUser = JSON.parse(currentUser)
+        let username = currentUser.username
+        
+        
+        // Post Request Data
+        const postData = JSON.stringify({
+          gameID: this.gameID,
+          category: listIndex,
+        })
+
+        // Post Request Options
+        const requestOptions = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: postData,
+        }
+
+        const response = await fetch(
+          "http://localhost:4040/api/users/" + username + "/add_game", requestOptions)
+        
+        // If the game was added to the user's list, alert the user
+        if (response.status == 200) {
+          // print the response string to the console
+          const responseString = await response.text()
+          alert(responseString)
+        }
+        else {
+          alert("Error adding game to your list.")
+        }
+      }
     },
   },
 
   // when the page is loaded, get the game info from the API
   async created() {
     // get the result of getGameInfo and store it in the game variable
-    this.gameDetails = await this.getGameInfo();
+    this.gameDetails = await this.getGameInfo()
 
     this.dataLoaded = true;
   },
 };
 </script>
   
-  <style>
+<style>
+#similarGame {
+  cursor: pointer;
+  color: rgb(60, 0, 0);
+}
 </style>

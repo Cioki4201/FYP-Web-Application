@@ -37,7 +37,7 @@ public class IGDBService implements IGDBRepo {
 
     @Override
     public JSONObject getGameInfo(String gameID) throws UnirestException {
-        String query = "where id = " + gameID + "; fields name, cover, storyline, summary, rating, rating_count, platforms, first_release_date, websites, similar_games;";
+        String query = "where id = " + gameID + "; fields name, cover, storyline, summary, total_rating, total_rating_count, platforms, first_release_date, websites, similar_games;";
         JSONArray returnBody = request.post(query, "games");
         JSONObject gameInfo = new JSONObject(returnBody.get(0).toString());
 
@@ -52,9 +52,23 @@ public class IGDBService implements IGDBRepo {
             res.put("storyline", "No storyline available");
         }
 
-        res.put("summary", gameInfo.get("summary"));
-        res.put("rating", gameInfo.get("rating"));
-        res.put("rating_count", gameInfo.get("rating_count"));
+        try {
+            res.put("summary", gameInfo.get("summary"));
+        } catch (Exception e) {
+            res.put("summary", "No summary available");
+        }
+
+        try {
+            res.put("rating", gameInfo.get("total_rating"));
+        } catch (Exception e) {
+            res.put("rating", "No rating available");
+        }
+
+        try {
+            res.put("rating_count", gameInfo.get("total_rating_count"));
+        } catch (Exception e) {
+            res.put("rating_count", "No rating count available");
+        }
 
         res.put("coverUrl", getCoverArt(gameInfo.get("cover").toString()));
 

@@ -5,16 +5,16 @@
       <!-- Sidebar navigation -->
       <v-list>
         <!-- List of navigation items -->
-        <v-list-tile
+        <v-list-item
           v-for="item in menuItems"
           :key="item.title"
           :to="item.path"
         >
-          <v-list-tile-action>
+          <v-list-item-action>
             <v-icon>{{ item.icon }}</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-content>{{ item.title }}</v-list-tile-content>
-        </v-list-tile>
+          </v-list-item-action>
+          <span>{{ item.title }}</span>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -40,30 +40,35 @@
         </v-btn>
 
         <!-- Log In Button -->
-        <v-btn flat @click="toggleLoginModal">
+        <v-btn flat @click="toggleLoginModal" v-if="!loggedIn">
           Log In
         </v-btn>
 
         <!-- Sign Up Button -->
-        <v-btn flat @click="toggleSignupModal">
+        <v-btn flat @click="toggleSignupModal" v-if="!loggedIn">
           Sign Up
+        </v-btn>
+
+        <!-- Log Out Button -->
+        <v-btn flat @click="logOut" v-if="loggedIn">
+          Log Out
         </v-btn>
       </v-toolbar-items>
 
     </v-toolbar>
 
-    <v-content>
+    <v-main>
       <!-- Main content area -->
       <router-view></router-view>
       <!-- Render the appropriate component based on the current URL -->
-    </v-content>
+    </v-main>
   </v-app>
 
   <!-- Sign Up Modal -->
   <SignUpModal v-if="showSignupModal" @closeSignupModal="toggleSignupModal" />
 
   <!-- Log In Modal -->
-  <LogInModal v-if="showLoginModal" @closeLoginModal="toggleLoginModal" />
+  <LogInModal v-if="showLoginModal" @closeLoginModal="toggleLoginModal" @changeLoginStatus="loggedIn = !loggedIn"/>
 </template>
 
 
@@ -81,6 +86,7 @@ export default {
 
   data() {
     return {
+      loggedIn: false,
       showSignupModal: false,
       showLoginModal: false,
       appTitle: "MyGameList",
@@ -100,9 +106,26 @@ export default {
 
     toggleLoginModal() {
       this.showLoginModal = !this.showLoginModal
+    },
+
+    logOut() {
+      localStorage.removeItem("signInObj");
+      this.loggedIn = false;
+      console.log("Successfully logged out")
+    }
+  },
+
+  created() {
+    // Check if user is logged in
+    if (localStorage.getItem("signInObj")){
+      this.loggedIn = true;
+      console.log("User is logged in")
+    } else {
+      this.loggedIn = false;
+      console.log("User is not logged in")
     }
   }
-};
+}
 </script>
 
 

@@ -9,11 +9,13 @@
     <button @click="search" class="search-button">Search</button>
   </div>
 
-  <SearchResults
-    :games="searchResult"
-    :imagesFetched="imagesFetched"
-    :searching="searching"
-  />
+  <!-- Loading Modal -->
+  <div v-if="searching" class="loading-modal">
+    <div class="loading-modal-content">
+      <div class="loading-spinner"></div>
+      <h4>Searching For "{{ searchText }}"...</h4>
+    </div>
+  </div>
 </template>
   
 <script>
@@ -64,6 +66,19 @@ export default {
       this.imagesFetched = true;
       this.searching = false;
       console.log("Search Results Updated");
+
+      this.$router.push({
+        name: "SearchResultsView",
+        query: {
+          games: JSON.stringify(this.searchResult),
+          imagesFetched: JSON.stringify(this.imagesFetched),
+          searching: JSON.stringify(this.searching),
+        },
+      });
+
+      setTimeout(function () {
+        window.location.reload();
+      }, 10);
     },
   },
 };
@@ -99,5 +114,41 @@ export default {
 
 .search-button:hover {
   background-color: #0062cc;
+}
+
+.loading-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.loading-modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.loading-spinner {
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

@@ -2,13 +2,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import GamePage from '../views/GamePage.vue'
 import MyList from '../views/MyList.vue'
+import SearchResultsView from '../views/SearchResultsView.vue'
 
 const routes = [
+  // Home Page
   {
     path: '/',
     name: 'home',
     component: HomeView
   },
+  // Game Page
   {
     path:'/game/:id',
     name:'GamePage',
@@ -21,7 +24,18 @@ const routes = [
     name: 'MyList',
     component: MyList,
     props: true
-  }
+  },
+  // Search Results Page
+  {
+    path: "/search",
+    name: "SearchResultsView",
+    component: SearchResultsView,
+    props: (route) => ({
+      games: JSON.parse(route.query.games),
+      imagesFetched: JSON.parse(route.query.imagesFetched),
+      searching: JSON.parse(route.query.searching),
+    }),
+  },
 ]
 
 const router = createRouter({

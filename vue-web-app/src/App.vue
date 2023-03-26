@@ -18,7 +18,7 @@
       <v-spacer></v-spacer>
 
       <!-- SEARCH BAR -->
-      <SearchBar class="search-bar"/>
+      <SearchBar class="search-bar" />
 
       <!-- TOOLBAR LINKS -->
       <v-toolbar-items class="hidden-xs-only">
@@ -52,7 +52,12 @@
         </v-btn>
 
         <!-- Log Out Button -->
-        <v-btn flat @click="logOut" v-if="loggedIn"> Log Out </v-btn>
+        <v-btn flat @click="logOut" v-if="loggedIn">
+          <span>
+            Log Out
+            <font-awesome-icon icon="sign-out-alt" />
+          </span>
+        </v-btn>
       </v-toolbar-items>
     </v-toolbar>
 

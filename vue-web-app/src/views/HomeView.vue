@@ -1,11 +1,9 @@
 <template>
   <div class="home">
-    <SearchBar />
   </div>
 </template>
 
 <script>
-import SearchBar from '@/components/search/SearchBar.vue'
 export default {
   name: 'HomeView',
   data () {
@@ -14,7 +12,6 @@ export default {
     }
   },
   components: {
-    SearchBar
   },
   methods: {
     

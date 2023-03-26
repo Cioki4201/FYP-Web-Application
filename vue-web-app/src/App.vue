@@ -1,28 +1,13 @@
 <template>
   <v-app>
     <!-- Main app container -->
-    <v-navigation-drawer v-model="sidebar" app class="text-red">
-      <!-- Sidebar navigation -->
-      <v-list>
-        <!-- List of navigation items -->
-        <v-list-item
-          v-for="item in menuItems"
-          :key="item.title"
-          :to="item.path"
-        >
-          <v-list-item-action>
-            <v-icon>{{ item.icon }}</v-icon>
-          </v-list-item-action>
-          <span>{{ item.title }}</span>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
 
     <v-toolbar app>
       <!-- Toolbar navigation -->
       <span class="hidden-sm-and-up">
         <v-app-bar-nav-icon @click="sidebar = !sidebar"> </v-app-bar-nav-icon>
       </span>
+
       <v-toolbar-title>
         <router-link to="/" style="cursor: pointer">
           <!-- Link to homepage -->
@@ -32,29 +17,43 @@
 
       <v-spacer></v-spacer>
 
+      <!-- SEARCH BAR -->
+      <SearchBar class="search-bar"/>
+
+      <!-- TOOLBAR LINKS -->
       <v-toolbar-items class="hidden-xs-only">
-        <!-- List of toolbar items -->
-        <v-btn flat v-for="item in menuItems" :key="item.title" :to="item.path">
-          <v-icon left dark>{{ item.icon }}</v-icon>
-          {{ item.title }}
+        <!-- List of Navbar items -->
+        <v-btn
+          flat
+          v-for="item in updatedMenuItems"
+          :key="item.title"
+          :to="item.path"
+        >
+          <span>
+            {{ item.title }}
+            <font-awesome-icon :icon="item.icon" />
+          </span>
         </v-btn>
 
         <!-- Log In Button -->
         <v-btn flat @click="toggleLoginModal" v-if="!loggedIn">
-          Log In
+          <span>
+            Log In
+            <font-awesome-icon icon="sign-in-alt" />
+          </span>
         </v-btn>
 
         <!-- Sign Up Button -->
         <v-btn flat @click="toggleSignupModal" v-if="!loggedIn">
-          Sign Up
+          <span>
+            Sign Up
+            <font-awesome-icon icon="user-plus" />
+          </span>
         </v-btn>
 
         <!-- Log Out Button -->
-        <v-btn flat @click="logOut" v-if="loggedIn">
-          Log Out
-        </v-btn>
+        <v-btn flat @click="logOut" v-if="loggedIn"> Log Out </v-btn>
       </v-toolbar-items>
-
     </v-toolbar>
 
     <v-main>
@@ -68,69 +67,102 @@
   <SignUpModal v-if="showSignupModal" @closeSignupModal="toggleSignupModal" />
 
   <!-- Log In Modal -->
-  <LogInModal v-if="showLoginModal" @closeLoginModal="toggleLoginModal" @changeLoginStatus="loggedIn = !loggedIn"/>
+  <LogInModal
+    v-if="showLoginModal"
+    @closeLoginModal="toggleLoginModal"
+    @changeLoginStatus="loggedIn = !loggedIn"
+  />
 </template>
 
 
 <script>
-import SignUpModal from '@/components/SignUpModal.vue'
-import LogInModal from './components/LogInModal.vue';
+import SignUpModal from "@/components/SignUpModal.vue";
+import LogInModal from "./components/LogInModal.vue";
+import SearchBar from "./components/search/SearchBar.vue";
 
 export default {
   name: "App",
 
   components: {
     SignUpModal,
-    LogInModal
+    LogInModal,
+    SearchBar,
   },
 
   data() {
     return {
+      currentUsername: "",
       loggedIn: false,
       showSignupModal: false,
       showLoginModal: false,
       appTitle: "MyGameList",
       sidebar: false,
       menuItems: [
-        { title: "Home", path: "/", icon: "logout" },
-        { title: "MyList", path: "/", icon: "face" },
-        { title: "Browse", path: "/", icon: "lock_open" },
+        { title: "Home", path: "/", icon: "house" },
+        {
+          title: "MyList",
+          path: "/mylist/" + this.currentUsername,
+          icon: "list",
+        },
+        { title: "Browse", path: "/", icon: "gamepad" },
       ],
     };
   },
-  
+
   methods: {
     toggleSignupModal() {
-      this.showSignupModal = !this.showSignupModal
+      this.showSignupModal = !this.showSignupModal;
     },
 
     toggleLoginModal() {
-      this.showLoginModal = !this.showLoginModal
+      this.showLoginModal = !this.showLoginModal;
     },
 
     logOut() {
       localStorage.removeItem("signInObj");
       this.loggedIn = false;
-      console.log("Successfully logged out")
-    }
+      console.log("Successfully logged out");
+    },
   },
 
   created() {
     // Check if user is logged in
-    if (localStorage.getItem("signInObj")){
+    if (localStorage.getItem("signInObj")) {
       this.loggedIn = true;
-      console.log("User is logged in")
+      console.log("User is logged in");
+
+      // Get current username
+      var signInObj = JSON.parse(localStorage.getItem("signInObj"));
+      this.currentUsername = signInObj.username;
+      console.log("Current username: " + this.currentUsername);
     } else {
       this.loggedIn = false;
-      console.log("User is not logged in")
+      console.log("User is not logged in");
     }
-  }
-}
+  },
+
+  computed: {
+    // Update the path of the MyList menu item if the user is logged in
+    updatedMenuItems() {
+      return this.menuItems.map((item) => {
+        if (item.title === "MyList") {
+          return { ...item, path: `/mylist/${this.currentUsername}` };
+        } else {
+          return item;
+        }
+      });
+    },
+  },
+};
 </script>
 
 
 <style>
 .v-application {
   background-color: #ffffff;
+}
+
+.search-bar {
+  margin: auto 40px;
 }
 </style>

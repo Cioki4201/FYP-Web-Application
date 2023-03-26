@@ -4,7 +4,12 @@ import com.paul.fyp.models.User;
 
 import com.paul.fyp.models.dto.GameDTO;
 import com.paul.fyp.repository.UserRepository;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -34,5 +39,29 @@ public class UserController {
             userRepository.save(user);
             return "Game added!";
         }
+    }
+
+    // Gets all user details from database and returns them as a json object so that it can be used in a javascript function. Label each element in the json object with the name of the variable you want to use in the javascript function.
+    @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getUser(@PathVariable("username") String username) {
+        User user = userRepository.findByUsername(username).get();
+
+        JSONObject userJSON = new JSONObject();
+        userJSON.put("username", user.getUsername());
+        userJSON.put("email", user.getEmail());
+        userJSON.put("firstName", user.getFirstName());
+        userJSON.put("lastName", user.getLastName());
+
+        JSONArray gamesJSON = new JSONArray();
+        for (int i = 0; i < 5; i++) {
+            JSONArray categoryJSON = new JSONArray();
+            for (String game : user.getGames().get(i)) {
+                categoryJSON.put(game);
+            }
+            gamesJSON.put(categoryJSON);
+        }
+        userJSON.put("games", gamesJSON);
+
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(userJSON.toString());
     }
 }

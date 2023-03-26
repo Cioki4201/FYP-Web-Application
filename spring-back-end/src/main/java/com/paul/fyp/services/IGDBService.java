@@ -3,9 +3,12 @@ package com.paul.fyp.services;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.paul.fyp.models.IGDBRequest;
+import com.paul.fyp.models.dto.GamesIdsDTO;
 import com.paul.fyp.repository.IGDBRepo;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.CompletableFuture;
@@ -82,20 +85,26 @@ public class IGDBService implements IGDBRepo {
             JSONArray platforms = gameInfo.getJSONArray("platforms");
             JSONArray platformNames = new JSONArray();
 
-            for (Object platform : platforms) {
-                String platformQuery = "where id = " + platform.toString() + "; fields name;";
-                JSONArray platformInfo = null;
+            // Create a comma-separated list of platform IDs for a single query
+            String platformIds = String.join(",", platforms.toList().stream().map(Object::toString).collect(Collectors.toList()));
 
-                try {
-                    platformInfo = request.post(platformQuery, "platforms");
-                } catch (UnirestException e) {throw new RuntimeException(e);}
+            // Modify the query to request information for all platforms at once
+            String platformQuery = "where id = (" + platformIds + "); fields name;";
 
-                JSONObject platformObj = new JSONObject(platformInfo.get(0).toString());
-                platformNames.put(platformObj.get("name"));
+            try {
+                JSONArray platformInfo = request.post(platformQuery, "platforms");
+
+                for (int i = 0; i < platformInfo.length(); i++) {
+                    JSONObject platformObj = platformInfo.getJSONObject(i);
+                    platformNames.put(platformObj.get("name"));
+                }
+            } catch (UnirestException e) {
+                throw new RuntimeException(e);
             }
 
             return platformNames;
         });
+
 
         // =============================== RELEASE DATE ===============================
 
@@ -135,16 +144,22 @@ public class IGDBService implements IGDBRepo {
         CompletableFuture<JSONArray> websiteUrlsFuture = CompletableFuture.supplyAsync(() -> {
             JSONArray websites = gameInfo.getJSONArray("websites");
             JSONArray websiteUrls = new JSONArray();
-            for (Object website : websites) {
-                String websiteQuery = "where id = " + website.toString() + "; fields url;";
-                JSONArray websiteInfo = null;
 
-                try {
-                    websiteInfo = request.post(websiteQuery, "websites");
-                } catch (UnirestException e) {throw new RuntimeException(e);}
+            // Create a comma-separated list of website IDs for a single query
+            String websiteIds = String.join(",", websites.toList().stream().map(Object::toString).collect(Collectors.toList()));
 
-                JSONObject websiteObj = new JSONObject(websiteInfo.get(0).toString());
-                websiteUrls.put(websiteObj.get("url"));
+            // Modify the query to request information for all websites at once
+            String websiteQuery = "where id = (" + websiteIds + "); fields url;";
+
+            try {
+                JSONArray websiteInfo = request.post(websiteQuery, "websites");
+
+                for (int i = 0; i < websiteInfo.length(); i++) {
+                    JSONObject websiteObj = websiteInfo.getJSONObject(i);
+                    websiteUrls.put(websiteObj.get("url"));
+                }
+            } catch (UnirestException e) {
+                throw new RuntimeException(e);
             }
 
             return websiteUrls;
@@ -158,5 +173,17 @@ public class IGDBService implements IGDBRepo {
         res.put("websites", websiteUrlsFuture.join());
 
         return res;
+    }
+
+    @Override
+    public ResponseEntity<String> getRawGameData(GamesIdsDTO gameIDs) throws UnirestException {
+        // get all game ids and store them in a string, divided by commas
+        String gameIDsString = String.join(",", gameIDs.getGameIDs());
+
+        String query = "where id = (" + gameIDsString + "); fields name;";
+
+        JSONArray returnBody = request.post(query, "games");
+
+        return new ResponseEntity<>(returnBody.toString(), HttpStatus.OK);
     }
 }

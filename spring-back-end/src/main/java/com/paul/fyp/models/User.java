@@ -140,4 +140,9 @@ public class User {
       games.get(to).add(gameID);
   }
 
+  // Get Games
+    public List<List<String>> getGames() {
+        return games;
+    }
+
 }

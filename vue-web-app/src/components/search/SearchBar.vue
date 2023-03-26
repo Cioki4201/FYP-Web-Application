@@ -81,9 +81,10 @@ export default {
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 15px;
   margin-right: 10px;
   width: 300px;
+  background-color: white;
 }
 
 .search-button {

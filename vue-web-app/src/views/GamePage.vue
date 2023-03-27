@@ -7,12 +7,7 @@
     <!-- Add Game to MyList -->
     <v-menu>
       <template v-slot:activator="{ props }">
-        <v-btn
-          color="primary"
-          v-bind="props"
-        >
-          Add Game to MyList
-        </v-btn>
+        <v-btn color="primary" v-bind="props"> Add Game to MyList </v-btn>
       </template>
       <v-list>
         <v-list-item
@@ -20,7 +15,9 @@
           :key="index"
           :value="index"
         >
-          <v-list-item-title @click="addGameToMyList(item.value)">{{ item.label }}</v-list-item-title>
+          <v-list-item-title @click="addGameToMyList(item.value)">{{
+            item.label
+          }}</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -97,19 +94,11 @@ export default {
       return game;
     },
 
-    async getGameInfo() {
-      const response = await fetch(
-        "http://localhost:4040/api/igdb/game/" + this.gameID
-      );
-      const game = await response.json()
-      return game;
-    },
-
     // method that reloads page
     goToGamePage(gameId) {
-      this.$router.push({ path: `/game/${gameId}` })
+      this.$router.push({ path: `/game/${gameId}` });
       setTimeout(function () {
-        window.location.reload()
+        window.location.reload();
       }, 10);
     },
 
@@ -117,39 +106,38 @@ export default {
     async addGameToMyList(listIndex) {
       // Get the current user's username from the session storage
       if (localStorage.getItem("signInObj") == null) {
-        alert("Please sign in to add games to your list.")
+        alert("Please sign in to add games to your list.");
         return;
-      } 
-      else {
-        let currentUser = localStorage.getItem("signInObj")
-        currentUser = JSON.parse(currentUser)
-        let username = currentUser.username
-        
-        
+      } else {
+        let currentUser = localStorage.getItem("signInObj");
+        currentUser = JSON.parse(currentUser);
+        let username = currentUser.username;
+
         // Post Request Data
         const postData = JSON.stringify({
           gameID: this.gameID,
           category: listIndex,
-        })
+        });
 
         // Post Request Options
         const requestOptions = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: postData,
-        }
+        };
 
         const response = await fetch(
-          "http://localhost:4040/api/users/" + username + "/add_game", requestOptions)
-        
+          "http://localhost:4040/api/users/" + username + "/add_game",
+          requestOptions
+        );
+
         // If the game was added to the user's list, alert the user
         if (response.status == 200) {
           // print the response string to the console
-          const responseString = await response.text()
-          alert(responseString)
-        }
-        else {
-          alert("Error adding game to your list.")
+          const responseString = await response.text();
+          alert(responseString);
+        } else {
+          alert("Error adding game to your list.");
         }
       }
     },
@@ -158,7 +146,11 @@ export default {
   // when the page is loaded, get the game info from the API
   async created() {
     // get the result of getGameInfo and store it in the game variable
-    this.gameDetails = await this.getGameInfo()
+    this.gameDetails = await this.getGameInfo();
+
+    // Processing cover url
+    const coverObj = JSON.parse(this.gameDetails.coverUrl);
+    this.gameDetails.coverUrl = coverObj[0].url;
 
     this.dataLoaded = true;
   },

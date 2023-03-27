@@ -3,6 +3,7 @@ package com.paul.fyp.services;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.paul.fyp.models.IGDBRequest;
+import com.paul.fyp.models.dto.CoverIDsDTO;
 import com.paul.fyp.models.dto.GamesIdsDTO;
 import com.paul.fyp.repository.IGDBRepo;
 import org.json.JSONArray;
@@ -21,24 +22,47 @@ public class IGDBService implements IGDBRepo {
 
     @Override
     public JSONArray gameSearch(String searchQuery) throws UnirestException {
-        searchQuery = "search \"" + searchQuery + "\"; fields name, cover; limit 50;";
+        searchQuery = "search \"" + searchQuery + "\"; fields name, cover; limit 70;";
         JSONArray returnBody = request.post(searchQuery, "games");
 
         return returnBody;
     }
 
     @Override
-    public String getCoverArt(String artID) throws UnirestException {
+    public ResponseEntity<String> getCoverArt(CoverIDsDTO coverIDsDTO) throws UnirestException {
+        // get all game ids and store them in a string, divided by commas
+        String coverIDsString = String.join(",", coverIDsDTO.getCoverIDs());
+
         try {
-            String query = "where id = " + artID + "; fields *;";
+            String query = "where id = (" + coverIDsString + "); fields *; limit 70;";
             JSONArray returnBody = request.post(query, "covers");
 
-            JSONObject artObject = new JSONObject(returnBody.get(0).toString());
-            return "https://images.igdb.com/igdb/image/upload/t_cover_big/" + artObject.get("image_id") + ".jpg";
-        } catch (Exception e) { // if no cover art is found return default image
-            return "https://publications.iarc.fr/uploads/media/default/0001/02/thumb_1205_default_publication.jpeg";
-        }
+            // create a new JSONArray to store the processed cover URLs
+            JSONArray processedCovers = new JSONArray();
 
+            // iterate through the returnBody and construct the URLs
+            for (int i = 0; i < returnBody.length(); i++) {
+                JSONObject artObject = returnBody.getJSONObject(i);
+                String image_id = artObject.getString("image_id");
+                int game_id = artObject.getInt("game");
+
+                // construct the URL
+                String url = "https://images.igdb.com/igdb/image/upload/t_cover_big/" + image_id + ".jpg";
+
+                // create a new JSONObject to store the URL and game id
+                JSONObject coverInfo = new JSONObject();
+                coverInfo.put("game", game_id);
+                coverInfo.put("url", url);
+
+                // add the coverInfo JSONObject to the processedCovers JSONArray
+                processedCovers.put(coverInfo);
+            }
+
+            return new ResponseEntity<>(processedCovers.toString().replace("\\", ""), HttpStatus.OK);
+        } catch (Exception e) {
+            // if no cover art is found return default image
+            return new ResponseEntity<>("https://publications.iarc.fr/uploads/media/default/0001/02/thumb_1205_default_publication.jpeg", HttpStatus.OK);
+        }
     }
 
     @Override
@@ -77,7 +101,9 @@ public class IGDBService implements IGDBRepo {
             res.put("rating_count", "No rating count available");
         }
 
-        res.put("coverUrl", getCoverArt(gameInfo.get("cover").toString()));
+        String[] coverID = {gameInfo.get("cover").toString()};
+        CoverIDsDTO coverIDsDTO = new CoverIDsDTO(coverID);
+        res.put("coverUrl", getCoverArt(coverIDsDTO).getBody());
 
         // =========================== PLATFORMS ===========================
 

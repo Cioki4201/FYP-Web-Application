@@ -38,12 +38,8 @@ export default {
     async search() {
       this.imagesFetched = false;
       this.searching = true;
-      // Call an API or perform a search action with the search text
-      console.log(
-        "Performing search for:",
-        "http://localhost:4040/api/igdb/search/" + this.searchText
-      );
 
+      // Call an API or perform a search action with the search text
       const response = await fetch(
         "http://localhost:4040/api/igdb/search/" + this.searchText
       );
@@ -54,14 +50,38 @@ export default {
       // if a game does not have a cover ID remove it from the list
       this.searchResult = this.searchResult.filter((game) => game.cover);
 
-      const coverUrls = await Promise.all(
-        games.map((game) =>
-          fetch("http://localhost:4040/api/igdb/cover/" + game.cover).then(
-            (response) => response.text()
-          )
-        )
+      // fetch the cover image for each game and store it in a list
+      let coverIds = this.searchResult.map((game) => game.cover);
+
+      // Create a JSON object with a key 'coverIDs' containing the coverIds array
+      const requestBody = {
+        coverIDs: coverIds,
+      };
+
+      // Getting the cover URLS for each search result
+
+      const requestOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      };
+
+      // Send a single request with the requestBody containing all coverIds
+      const coverResponse = await fetch(
+        "http://localhost:4040/api/igdb/cover/",
+        requestOptions
       );
-      games.forEach((game, i) => (game.coverUrl = coverUrls[i]));
+      const coverUrls = await coverResponse.json();
+
+      // Replace the game cover with the corresponding URL
+      this.searchResult.forEach((game) => {
+        const coverInfo = coverUrls.find((cover) => cover.game === game.id);
+        if (coverInfo) {
+          game.coverUrl = coverInfo.url;
+        } else {
+          console.log("Cover not found for game ID:", game.id);
+        }
+      });
 
       this.imagesFetched = true;
       this.searching = false;

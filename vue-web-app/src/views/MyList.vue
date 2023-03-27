@@ -113,6 +113,11 @@ export default {
   },
 
   created: async function () {
+    if (!localStorage.getItem("signInObj")) {
+      alert("You must be signed in to view this page");
+      this.$router.push("/");
+    }
+
     await this.getUserData();
 
     for (let i = 0; i < this.tabs.length; i++) {

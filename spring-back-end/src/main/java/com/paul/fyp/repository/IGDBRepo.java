@@ -3,6 +3,7 @@ package com.paul.fyp.repository;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.paul.fyp.models.IGDBRequest;
+import com.paul.fyp.models.dto.CoverIDsDTO;
 import com.paul.fyp.models.dto.GamesIdsDTO;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Repository;
 public interface IGDBRepo {
     JSONArray gameSearch(String searchQuery) throws UnirestException;
 
-    String getCoverArt(String artID) throws UnirestException;
+    ResponseEntity<String> getCoverArt(CoverIDsDTO coverIDsDTO) throws UnirestException;
 
     JSONObject getGameInfo(String gameID) throws UnirestException;
 

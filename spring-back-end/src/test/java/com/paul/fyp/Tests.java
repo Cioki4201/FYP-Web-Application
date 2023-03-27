@@ -1,6 +1,7 @@
 package com.paul.fyp;
 
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.paul.fyp.models.dto.CoverIDsDTO;
 import com.paul.fyp.services.IGDBService;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,9 @@ class Tests {
 
 	@Test
 	void getCoverArtTest() throws UnirestException {
-		String returnBody = igdbService.getCoverArt("261332");
+		String[] ids = {"41111", "224339", "196852", "104928"};
+		CoverIDsDTO coverIDsDTO = new CoverIDsDTO(ids);
+		String returnBody = igdbService.getCoverArt(coverIDsDTO).getBody();
 		System.out.println(returnBody);
 	}
 

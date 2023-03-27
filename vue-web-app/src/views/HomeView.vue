@@ -1,22 +1,40 @@
 <template>
   <div class="home">
+    <h1>Home</h1>
+    <button @click="showAlert('Must Be Logged In')">Show Alert</button>
+    <!-- create a text input and bind it to the alertMessage -->
+    <AutoFadeAlert
+      :message="alertMessage"
+      type="error"
+      icon="info-circle"
+    />
   </div>
 </template>
 
 <script>
+import AutoFadeAlert from '@/components/AutoFadeAlert.vue';
+import { nextTick } from 'vue';
+
 export default {
   name: 'HomeView',
-  data () {
+  data() {
     return {
       showModal: false,
-    }
+      alertMessage: '',
+    };
   },
   components: {
+    AutoFadeAlert,
   },
   methods: {
-    
-  }
-}
+    showAlert(message) {
+      this.alertMessage = '';
+      nextTick(() => {
+        this.alertMessage = message;
+      });
+    },
+  },
+};
 </script>
 
 <style>

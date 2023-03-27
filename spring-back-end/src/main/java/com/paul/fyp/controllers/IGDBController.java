@@ -1,6 +1,7 @@
 package com.paul.fyp.controllers;
 
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.paul.fyp.models.dto.CoverIDsDTO;
 import com.paul.fyp.models.dto.GamesIdsDTO;
 import com.paul.fyp.services.IGDBService;
 import org.json.JSONArray;
@@ -26,9 +27,9 @@ public class IGDBController {
     }
 
     // RETURNS THE GAME COVER ART FOR A GIVEN COVER ID
-    @GetMapping("/cover/{cover_id}")
-    public String getCover(@PathVariable("cover_id") String coverID) throws UnirestException {
-        return igdbService.getCoverArt(coverID);
+    @PostMapping("/cover")
+    public ResponseEntity<String> getCover(@RequestBody CoverIDsDTO coverIDsDTO) throws UnirestException {
+        return igdbService.getCoverArt(coverIDsDTO);
     }
 
     // RETURNS ALL INFORMATION FOR A GIVEN GAME ID

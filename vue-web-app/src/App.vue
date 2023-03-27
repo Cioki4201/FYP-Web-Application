@@ -2,6 +2,13 @@
   <v-app>
     <!-- Main app container -->
 
+    <!-- Alert -->
+    <AutoFadeAlert
+      :message="alertMessage"
+      :type="alertType"
+      :icon="alertIcon"
+    />
+
     <v-toolbar app>
       <!-- Toolbar navigation -->
       <span class="hidden-sm-and-up">
@@ -18,7 +25,7 @@
       <v-spacer></v-spacer>
 
       <!-- SEARCH BAR -->
-      <SearchBar class="search-bar" />
+      <SearchBar />
 
       <!-- TOOLBAR LINKS -->
       <v-toolbar-items class="hidden-xs-only">
@@ -84,6 +91,9 @@
 import SignUpModal from "@/components/SignUpModal.vue";
 import LogInModal from "./components/LogInModal.vue";
 import SearchBar from "./components/search/SearchBar.vue";
+import AutoFadeAlert from '@/components/AutoFadeAlert.vue';
+
+import { nextTick } from 'vue';
 
 export default {
   name: "App",
@@ -92,6 +102,7 @@ export default {
     SignUpModal,
     LogInModal,
     SearchBar,
+    AutoFadeAlert,
   },
 
   data() {
@@ -111,10 +122,23 @@ export default {
         },
         { title: "Browse", path: "/", icon: "gamepad" },
       ],
+
+      alertMessage: "",
+      alertType: "",
+      alertIcon: "",
     };
   },
 
   methods: {
+    showAlert(message, type, icon) {
+      this.alertMessage = '';
+      nextTick(() => {
+        this.alertType = type;
+        this.alertIcon = icon;
+        this.alertMessage = message;
+      });
+    },
+
     toggleSignupModal() {
       this.showSignupModal = !this.showSignupModal;
     },
@@ -127,6 +151,8 @@ export default {
       localStorage.removeItem("signInObj");
       this.loggedIn = false;
       console.log("Successfully logged out");
+      this.showAlert("Logged Out...", "info", "check-circle");
+      this.$router.push("/");
     },
   },
 

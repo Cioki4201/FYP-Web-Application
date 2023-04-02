@@ -5,6 +5,7 @@
       v-model="searchText"
       placeholder="Search For Games..."
       class="search-input"
+      @keydown.enter="search"
     />
     <button @click="search" class="search-button">Search</button>
   </div>
@@ -115,25 +116,25 @@ export default {
 .search-input {
   padding: 10px;
   font-size: 16px;
-  border: 1px solid #ccc;
+  border: 2px solid var(--orange);
   border-radius: 15px;
   margin-right: 10px;
   width: 300px;
-  background-color: white;
+  background-color: rgb(10, 10, 10);
 }
 
 .search-button {
   padding: 10px 20px;
   font-size: 16px;
   border: none;
-  border-radius: 4px;
-  background-color: #007bff;
+  border-radius: 15px;
+  background-color: var(--orange);
   color: #fff;
   cursor: pointer;
 }
 
 .search-button:hover {
-  background-color: #0062cc;
+  background-color: var(--orange-dark);
 }
 
 .loading-modal {
@@ -150,7 +151,7 @@ export default {
 }
 
 .loading-modal-content {
-  background-color: white;
+  background-color: var(--dark);
   padding: 20px;
   border-radius: 5px;
   text-align: center;

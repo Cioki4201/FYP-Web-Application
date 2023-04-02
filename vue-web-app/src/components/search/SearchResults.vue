@@ -4,7 +4,7 @@
       <v-container>
         <v-row>
           <v-col v-for="game in games" :key="game.name" cols="12" sm="6" md="4" lg="3">
-            <v-card @click="goToGamePage(game.id)">
+            <v-card @click="goToGamePage(game.id)" class="game-card">
               <v-img :src="game.coverUrl"/>
               <v-card-title>{{game.name}}</v-card-title>
             </v-card>
@@ -38,6 +38,20 @@ export default {
 
 
 <style>
+
+.game-card {
+  border: var(--orange) 4px solid;
+  margin: 10px;
+  border-radius: 20px;
+  box-shadow: 0 0 15px var(--orange);
+}
+
+.game-card:hover {
+  border: var(--orange) 5px solid;
+  box-shadow: 0 0 30px var(--orange);
+}
+
+/* LOADING ICON */
 .loader {
   margin : 5% auto;
   border: 16px solid #f3f3f3;

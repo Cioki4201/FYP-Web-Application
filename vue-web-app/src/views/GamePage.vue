@@ -1,4 +1,7 @@
 <template>
+  <!-- ALERT -->
+  <AutoFadeAlert :message="alertMessage" :type="alertType" :icon="alertIcon" />
+
   <div v-if="dataLoaded">
     <h1>{{ gameDetails.name }}</h1>
     <br />
@@ -7,7 +10,7 @@
     <!-- Add Game to MyList -->
     <v-menu>
       <template v-slot:activator="{ props }">
-        <v-btn color="primary" v-bind="props"> Add Game to MyList </v-btn>
+        <v-btn color="orange" v-bind="props"> Add Game to MyList </v-btn>
       </template>
       <v-list>
         <v-list-item
@@ -58,11 +61,13 @@
 
   <div v-else>
     <h4>Loading Game Data...</h4>
-    <div class="loader"></div>
+    <div class="loading-spinner"></div>
   </div>
 </template>
 
 <script>
+import { nextTick } from "vue";
+
 export default {
   name: "GamePage",
 
@@ -81,10 +86,25 @@ export default {
         { value: 3, label: "Dropped" },
         { value: 4, label: "On Hold" },
       ],
+
+      // ALERT DATA
+      alertMessage: "",
+      alertType: "",
+      alertIcon: "",
     };
   },
 
   methods: {
+    // Alert Method
+    showAlert(message, type, icon) {
+      this.alertMessage = '';
+      nextTick(() => {
+        this.alertType = type;
+        this.alertIcon = icon;
+        this.alertMessage = message;
+      });
+    },
+
     // function that gets game info from the API and returns it as a JSON object
     async getGameInfo() {
       const response = await fetch(
@@ -135,9 +155,9 @@ export default {
         if (response.status == 200) {
           // print the response string to the console
           const responseString = await response.text();
-          alert(responseString);
+          this.showAlert(responseString, "success", "check");
         } else {
-          alert("Error adding game to your list.");
+          this.showAlert("Error adding game to your list.", "error", "xmark");
         }
       }
     },
@@ -161,5 +181,21 @@ export default {
 #similarGame {
   cursor: pointer;
   color: rgb(60, 0, 0);
+}
+
+.loading-spinner {
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
 }
 </style>

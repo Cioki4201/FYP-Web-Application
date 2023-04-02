@@ -69,7 +69,7 @@
   top: 5px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 2000;
+  z-index: 9999;
   width: auto;
   white-space: nowrap;
   border-radius: 20px;

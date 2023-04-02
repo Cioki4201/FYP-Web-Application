@@ -1,4 +1,12 @@
 body {
     margin: 0;
-    background-color: rgb(0, 214, 214);
+    font-family: 'Bungee Spice', cursive;
+    font-family: 'Lato', sans-serif;
+}
+
+:root {
+    --dark: #2d3033;
+    --darker: #232527;
+    --orange: #ff7b00;
+    --orange-dark: #ff6600;
 }

@@ -41,6 +41,23 @@ public class UserController {
         }
     }
 
+    @PostMapping("/{username}/remove_game/{gameID}")
+    public String removeGameFromUser(@PathVariable("username") String username, @PathVariable("gameID") String gameID) {
+        User user = userRepository.findByUsername(username).get();
+
+        //check if game already exists in user's list
+        int gameCategory = user.findGame(gameID);
+
+        if (gameCategory != -1) {
+            //if game already exists, remove it
+            user.removeGame(gameID);
+            userRepository.save(user);
+            return "Game removed!";
+        } else {
+            return "Game not found!";
+        }
+    }
+
     // Gets all user details from database and returns them as a json object so that it can be used in a javascript function. Label each element in the json object with the name of the variable you want to use in the javascript function.
     @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getUser(@PathVariable("username") String username) {
@@ -64,4 +81,6 @@ public class UserController {
 
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(userJSON.toString());
     }
+
+
 }

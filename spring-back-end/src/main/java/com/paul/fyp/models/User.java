@@ -145,4 +145,13 @@ public class User {
         return games;
     }
 
+  // Remove Game
+    public void removeGame(String gameID) {
+        for (int i = 0; i < 5; i++) {
+        if (games.get(i).contains(gameID)) {
+            games.get(i).remove(gameID);
+        }
+      }
+    }
+
 }

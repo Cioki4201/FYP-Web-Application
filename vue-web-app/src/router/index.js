@@ -23,7 +23,12 @@ const routes = [
     path: '/mylist/:username',
     name: 'MyList',
     component: MyList,
-    props: true
+  },
+  // Not Logged In MyList Page
+  {
+    path: '/mylist/',
+    name: 'MyListNotLoggedIn',
+    component: MyList,
   },
   // Search Results Page
   {

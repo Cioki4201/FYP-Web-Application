@@ -5,6 +5,10 @@ import { aliases, fa } from 'vuetify/iconsets/fa';
 import { mdi } from 'vuetify/iconsets/mdi';
 
 const vuetify = createVuetify({
+  theme: {
+    defaultTheme: 'dark'
+  },
+
   icons: {
     defaultSet: 'fa',
     aliases,

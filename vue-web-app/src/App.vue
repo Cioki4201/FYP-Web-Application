@@ -9,14 +9,14 @@
       :icon="alertIcon"
     />
 
-    <v-toolbar app>
+    <v-toolbar app class="nav-bar">
       <!-- Toolbar navigation -->
       <span class="hidden-sm-and-up">
         <v-app-bar-nav-icon @click="sidebar = !sidebar"> </v-app-bar-nav-icon>
       </span>
 
       <v-toolbar-title>
-        <router-link to="/" style="cursor: pointer">
+        <router-link to="/" class="logo">
           <!-- Link to homepage -->
           {{ appTitle }}
         </router-link>
@@ -70,7 +70,7 @@
 
     <v-main>
       <!-- Main content area -->
-      <router-view></router-view>
+      <router-view @mustLogInAlert="showAlert('You must be Logged In to view this page', 'error', 'exclamation-triangle')"></router-view>
       <!-- Render the appropriate component based on the current URL -->
     </v-main>
   </v-app>
@@ -83,6 +83,7 @@
     v-if="showLoginModal"
     @closeLoginModal="toggleLoginModal"
     @changeLoginStatus="loggedIn = !loggedIn"
+    @loggedInAlert='showAlert("Logged In Successfully", "success", "check")'
   />
 </template>
 
@@ -91,7 +92,6 @@
 import SignUpModal from "@/components/SignUpModal.vue";
 import LogInModal from "./components/LogInModal.vue";
 import SearchBar from "./components/search/SearchBar.vue";
-import AutoFadeAlert from '@/components/AutoFadeAlert.vue';
 
 import { nextTick } from 'vue';
 
@@ -102,7 +102,6 @@ export default {
     SignUpModal,
     LogInModal,
     SearchBar,
-    AutoFadeAlert,
   },
 
   data() {
@@ -184,16 +183,34 @@ export default {
       });
     },
   },
+  
 };
 </script>
 
 
 <style>
-.v-application {
-  background-color: #ffffff;
+.nav-bar {
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.26);
+  background-color: var(--darker);
 }
 
 .search-bar {
   margin: auto 40px;
+}
+
+.logo {
+  font-size: 2rem;
+  color: #da0000;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: 'Bungee Spice', cursive;
+}
+
+.logo:hover {
+  text-shadow: 0 0 7px rgba(255, 132, 0, 0.5);
+}
+
+body {
+  background-color: blue;
 }
 </style>

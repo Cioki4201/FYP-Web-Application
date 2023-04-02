@@ -3,7 +3,7 @@
     <v-card v-click-outside="closeModal">
       <v-card-title class="headline">Registration</v-card-title>
       <v-card-text>
-        <v-form ref="form" v-model="valid">
+        <v-form ref="form" v-model="valid" @keydown.enter="save">
 
           <v-text-field
             v-model="firstName"
@@ -61,8 +61,8 @@
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="save" :disabled="!valid">Save</v-btn>
-        <v-btn color="secondary" @click="cancel">Cancel</v-btn>
+        <v-btn color="orange" @click="save" :disabled="!valid">Register</v-btn>
+        <v-btn color="red" @click="cancel">Cancel</v-btn>
       </v-card-actions>
 
     </v-card>

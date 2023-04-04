@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import GamePage from '../views/GamePage.vue'
 import MyList from '../views/MyList.vue'
 import SearchResultsView from '../views/SearchResultsView.vue'
+import BrowseView from '@/views/BrowseView.vue'
 
 const routes = [
   // Home Page
@@ -29,6 +30,12 @@ const routes = [
     path: '/mylist/',
     name: 'MyListNotLoggedIn',
     component: MyList,
+  },
+  // Browse Games Page
+  {
+    path: '/browse',
+    name: 'BrowseGames',
+    component: BrowseView
   },
   // Search Results Page
   {

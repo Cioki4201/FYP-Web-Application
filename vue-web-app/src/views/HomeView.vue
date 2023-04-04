@@ -86,7 +86,7 @@ export default {
 }
 
 .intro {
-  padding: 100px 0px 100px 0px;
+  padding: 3% 0px 4% 0px;
   background-image: url("../assets/orange-keyboard-background.jpg");
   background-size: 100% auto;
   border-radius: 5px;
@@ -96,7 +96,7 @@ export default {
 
 .intro h1 {
   color: #fff;
-  font-size: 6.5rem;
+  font-size: 15vmin;
   margin-bottom: 10px;
   font-family: "Bungee Spice", cursive;
   text-shadow: 0 0 16px rgba(255, 98, 0, 0.7);
@@ -104,7 +104,7 @@ export default {
 
 .intro h3 {
   color: #ff8c00;
-  font-size: 1.5rem;
+  font-size: 3vmin;
   font-weight: 400;
   text-shadow: 0 0 16px rgba(255, 98, 0, 0.7);
   margin-left: 15%;

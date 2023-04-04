@@ -42,6 +42,14 @@
           </span>
         </v-btn>
 
+        <!-- MyList Button -->
+        <v-btn flat @click="routeTo('/mylist/' + this.currentUsername)" v-if="loggedIn">
+          <span>
+            MyList
+            <font-awesome-icon icon="list" />
+          </span>
+        </v-btn>
+
         <!-- Log In Button -->
         <v-btn flat @click="toggleLoginModal" v-if="!loggedIn">
           <span>
@@ -84,6 +92,7 @@
     @closeLoginModal="toggleLoginModal"
     @changeLoginStatus="loggedIn = !loggedIn"
     @loggedInAlert='showAlert("Logged In Successfully", "success", "check")'
+    @updateMyListPath="updateMyListPath"
   />
 </template>
 
@@ -114,12 +123,7 @@ export default {
       sidebar: false,
       menuItems: [
         { title: "Home", path: "/", icon: "house" },
-        {
-          title: "MyList",
-          path: "/mylist/" + this.currentUsername,
-          icon: "list",
-        },
-        { title: "Browse", path: "/", icon: "gamepad" },
+        { title: "Browse", path: "/browse", icon: "gamepad" },
       ],
 
       alertMessage: "",
@@ -153,6 +157,23 @@ export default {
       this.showAlert("Logged Out...", "info", "check-circle");
       this.$router.push("/");
     },
+
+    updateMyListPath() {
+      var signInObj = JSON.parse(localStorage.getItem("signInObj"));
+      this.currentUsername = signInObj.username;
+      
+      this.menuItems.map((item) => {
+        if (item.title === "MyList") {
+          item.path = `/mylist/${this.currentUsername}`;
+        }
+      });
+    },
+
+    // Route to page with path as input
+    routeTo(path) {
+      this.$router.push(path);
+    },
+    
   },
 
   created() {

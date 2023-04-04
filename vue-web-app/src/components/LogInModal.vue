@@ -107,6 +107,7 @@ export default {
           this.$emit("closeLoginModal");
           this.$refs.form.reset();
           this.$emit("loggedInAlert")
+          this.$emit("updateMyListPath")
         }
       }
     },

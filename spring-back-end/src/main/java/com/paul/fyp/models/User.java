@@ -1,5 +1,6 @@
 package com.paul.fyp.models;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +45,8 @@ public class User {
 
   // Game Categories: 0 = Want to Play, 1 = Playing, 2 = Completed, 3 = Dropped, 4 = On Hold
   private List<List<String>> games = new ArrayList<List<String>>();
+
+  private List<Integer> recommended_games = new ArrayList<Integer>();
 
 
   public User() {
@@ -117,11 +120,25 @@ public class User {
     this.roles = roles;
   }
 
+    public List<Integer> getRecommendedGames() {
+        return recommended_games;
+    }
+
+    public void setRecommendedGames(List<Integer> recommended_games) {
+        this.recommended_games = recommended_games;
+    }
+
 
   // ==================== Game Methods ====================
+
+  private GameRecommender gameRecommender = new GameRecommender();
+
   public void addGame(String gameID, int category) {
     // Add game to specified category
     games.get(category).add(gameID);
+
+    // Update Recommendations
+    this.UpdateRecommendations();
   }
 
   // Find if game is in any category and return the category
@@ -138,6 +155,9 @@ public class User {
   public void moveGame(String gameID, int from, int to) {
       games.get(from).remove(gameID);
       games.get(to).add(gameID);
+
+      // Update Recommendations
+      this.UpdateRecommendations();
   }
 
   // Get Games
@@ -152,6 +172,30 @@ public class User {
             games.get(i).remove(gameID);
         }
       }
+
+      // Update Recommendations
+      this.UpdateRecommendations();
+    }
+
+    public void UpdateRecommendations() {
+        // If user has no games, return
+        if (games.get(0).isEmpty() && games.get(1).isEmpty() && games.get(2).isEmpty()) {
+          return;
+        }
+
+        // Get User Games from "games" list from the following categories only 0 = Want to Play, 1 = Playing, 2 = Completed and store them all in a list
+        List<Integer> userGames = new ArrayList<Integer>();
+        for (int i = 0; i < 3; i++) {
+          for (String game : games.get(i)) {
+            userGames.add(Integer.parseInt(game));
+          }
+        }
+
+        try {
+          this.setRecommendedGames(gameRecommender.recommendGames(userGames));
+        } catch (IOException | InterruptedException e) {
+          e.printStackTrace();
+        }
     }
 
 }

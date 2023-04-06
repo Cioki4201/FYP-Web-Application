@@ -3,27 +3,32 @@
   <AutoFadeAlert :message="alertMessage" :type="alertType" :icon="alertIcon" />
 
   <div v-if="dataLoaded">
-    <h1>{{ gameDetails.name }}</h1>
-    <br />
-    <v-img :src="gameDetails.coverUrl" width="200px" /> <br />
+    <div class="artwork-background" :style="backgroundStyle">
+      <h1>{{ gameDetails.name }}</h1>
+      <div class="cover-title-add">
+        
+        <br />
+        <v-img :src="gameDetails.coverUrl" width="200px" class="cover-image"/> <br />
 
-    <!-- Add Game to MyList -->
-    <v-menu>
-      <template v-slot:activator="{ props }">
-        <v-btn color="orange" v-bind="props"> Add Game to MyList </v-btn>
-      </template>
-      <v-list>
-        <v-list-item
-          v-for="(item, index) in menuItems"
-          :key="index"
-          :value="index"
-        >
-          <v-list-item-title @click="addGameToMyList(item.value)">{{
-            item.label
-          }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
+        <!-- Add Game to MyList -->
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn color="orange" v-bind="props"> Add Game to MyList </v-btn>
+          </template>
+          <v-list>
+            <v-list-item
+              v-for="(item, index) in menuItems"
+              :key="index"
+              :value="index"
+            >
+              <v-list-item-title @click="addGameToMyList(item.value)">{{
+                item.label
+              }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+      </div>
+    </div>
 
     <h3>Storyline</h3>
     <p>{{ gameDetails.storyline }}</p>
@@ -70,6 +75,13 @@ import { nextTick } from "vue";
 
 export default {
   name: "GamePage",
+  props: {
+    id: {
+      type: String,
+      default: "",
+    },
+  },
+  emits: ["mustLogInAlert"],
 
   data() {
     return {
@@ -97,7 +109,7 @@ export default {
   methods: {
     // Alert Method
     showAlert(message, type, icon) {
-      this.alertMessage = '';
+      this.alertMessage = "";
       nextTick(() => {
         this.alertType = type;
         this.alertIcon = icon;
@@ -172,8 +184,53 @@ export default {
     const coverObj = JSON.parse(this.gameDetails.coverUrl);
     this.gameDetails.coverUrl = coverObj[0].url;
 
+    // Processing artwork/screenshot/similar game cover url(s)
+    for (let i = 0; i < this.gameDetails.artworks.length; i++) {
+      this.gameDetails.artworks[i] =
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
+        this.gameDetails.artworks[i].image_id +
+        ".jpg";
+    }
+
+    for (let i = 0; i < this.gameDetails.screenshots.length; i++) {
+      this.gameDetails.screenshots[i] =
+        "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
+        this.gameDetails.screenshots[i].image_id +
+        ".jpg";
+    }
+
+    for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
+      this.gameDetails.similarGames[i].cover =
+        "https://images.igdb.com/igdb/image/upload/t_cover_big/" +
+        this.gameDetails.similarGames[i].cover.image_id +
+        ".jpg";
+    }
+
+    // Processing Video url(s)
+    for (let i = 0; i < this.gameDetails.videos.length; i++) {
+      this.gameDetails.videos[i] =
+        "https://www.youtube.com/embed/" + this.gameDetails.videos[i].video_id;
+    }
+
+    console.log(this.gameDetails);
+
     this.dataLoaded = true;
   },
+
+  computed: {
+  backgroundStyle() {
+    if (this.gameDetails && this.gameDetails.artworks.length > 0) {
+      var lastArtwork = this.gameDetails.artworks.length - 1;
+      return {
+        "--background-image": `url('${this.gameDetails.artworks[lastArtwork]}')`,
+      };
+    } else {
+      return {
+        "--background-image": `url(${require("@/assets/default-orange-background.jpg")})`,
+      };
+    }
+  },
+},
 };
 </script>
   
@@ -197,5 +254,40 @@ export default {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.artwork-background {
+  position: relative;
+  width: 100%;
+  padding: 4rem;
+  overflow: hidden; /* Add this to prevent the blurred pseudo-element from going outside the div */
+  z-index: 0;
+}
+
+.artwork-background:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--background-image); /* Use the new variable here */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(10px);
+  z-index: -1;
+}
+
+.cover-image {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+  border-radius: 5%;
+}
+
+.cover-title-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
 }
 </style>

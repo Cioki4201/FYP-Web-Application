@@ -1,12 +1,11 @@
 import ast
 import pandas as pd
+import sys
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-pd.set_option('display.max_columns', None)
 
 def preprocess_data(games_df):
-    print('Preprocessing data...')
     games_df['summary'].fillna('', inplace=True)
 
     for col in ['genres', 'involved_companies', 'platforms']:
@@ -20,9 +19,13 @@ def preprocess_data(games_df):
 
     return games_df
 
+# Preprocess the data and save to a file
+# games_df = pd.read_csv('game_data.csv')
+# games_df = preprocess_data(games_df)
+# games_df.to_csv('preprocessed_game_data.csv', index=False)
+
 
 def generate_features(games_df):
-    print('Generating features...')
     vectorizer = TfidfVectorizer(stop_words='english', max_features=20000)
     summary_genre_matrix = vectorizer.fit_transform(games_df['summary_and_genres'])
 
@@ -30,7 +33,6 @@ def generate_features(games_df):
 
 
 def recommend_games(user_game_ids, games_df, summary_genre_matrix, top_n=5, min_rating=70, min_rating_count=20):
-    print('Recommending games...')
     user_game_indices = games_df[games_df['id'].isin(user_game_ids)].index
     user_game_matrix = summary_genre_matrix[user_game_indices]
 
@@ -47,36 +49,41 @@ def recommend_games(user_game_ids, games_df, summary_genre_matrix, top_n=5, min_
     return games_df.loc[most_similar_indices, ['name', 'id', 'total_rating', 'total_rating_count']]
 
 
-games_df = pd.read_csv('preprocessed_game_data.csv')
 
-# Data has been already preprocessed and saved to game_data.csv, so we can now skip the preprocessing step
-# games_df = preprocess_data(games_df)
 
-games_df = games_df.sample(frac=1, random_state=42).reset_index(drop=True)
+def main(user_games):
+    games_df = pd.read_csv('preprocessed_game_data.csv')
 
-user_games = [7360, 1879, 26381, 134595, 911, 1372]
+    # Data has been already preprocessed and saved to game_data.csv, so we can now skip the preprocessing step
+    # games_df = preprocess_data(games_df)
 
-# Extract user_games from the games_df
-user_games_df = games_df[games_df['id'].isin(user_games)]
+    games_df = games_df.sample(frac=1, random_state=42).reset_index(drop=True)
 
-# Exclude user_games from the games_df
-remaining_games = games_df[~games_df['name'].isin(user_games)]
+    # Extract user_games from the games_df
+    user_games_df = games_df[games_df['id'].isin(user_games)]
 
-# Sample the remaining_games
-sampled_games = remaining_games.head(10000 - len(user_games))
+    # Exclude user_games from the games_df
+    remaining_games = games_df[~games_df['name'].isin(user_games)]
 
-# Concatenate user_games_df and the sampled_games
-sampled_games = pd.concat([user_games_df, sampled_games], ignore_index=True)
+    # Sample the remaining_games
+    sampled_games = remaining_games.head(10000 - len(user_games))
 
-# Generate features for the sampled_games
-summary_genre_matrix = generate_features(sampled_games)
+    # Concatenate user_games_df and the sampled_games
+    sampled_games = pd.concat([user_games_df, sampled_games], ignore_index=True)
 
-# Recommend games based on the user_games
-recommended_games = recommend_games(user_games, sampled_games, summary_genre_matrix, top_n=50)
-print('Recommended games:')
-print(recommended_games)
+    # Generate features for the sampled_games
+    summary_genre_matrix = generate_features(sampled_games)
 
-# Preprocess the data and save to a file
-# games_df = pd.read_csv('game_data.csv')
-# games_df = preprocess_data(games_df)
-# games_df.to_csv('preprocessed_game_data.csv', index=False)
+    # Recommend games based on the user_games
+    recommended_games = recommend_games(user_games, sampled_games, summary_genre_matrix, top_n=8)
+    print('Recommended games:')
+    print(recommended_games)
+
+    # store game IDs in a list
+    game_ids = recommended_games['id'].tolist()
+    return game_ids
+
+
+if __name__ == '__main__':
+    user_games_list = list(map(int, sys.argv[1].split(",")))
+    main(user_games_list)

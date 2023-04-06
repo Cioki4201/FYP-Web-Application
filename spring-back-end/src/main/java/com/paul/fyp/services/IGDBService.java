@@ -67,12 +67,13 @@ public class IGDBService implements IGDBRepo {
 
     @Override
     public JSONObject getGameInfo(String gameID) throws UnirestException {
-        String query = "where id = " + gameID + "; fields name, cover, storyline, summary, total_rating, total_rating_count, platforms, first_release_date, websites, similar_games;";
+        String query = "where id = " + gameID + "; fields id, name, storyline, summary, total_rating, total_rating_count, cover, platforms.name, first_release_date, " +
+                "websites.url, similar_games.name, similar_games.cover.image_id, genres.name, age_ratings.rating, artworks.image_id, category, screenshots.image_id, videos.video_id;";
+
         JSONArray returnBody = request.post(query, "games");
         JSONObject gameInfo = new JSONObject(returnBody.get(0).toString());
 
         JSONObject res = new JSONObject();
-
 
         res.put("id", gameInfo.get("id"));
         res.put("name", gameInfo.get("name"));
@@ -106,97 +107,87 @@ public class IGDBService implements IGDBRepo {
         res.put("coverUrl", getCoverArt(coverIDsDTO).getBody());
 
         // =========================== PLATFORMS ===========================
-
-        CompletableFuture<JSONArray> platformNamesFuture = CompletableFuture.supplyAsync(() -> {
-            JSONArray platforms = gameInfo.getJSONArray("platforms");
-            JSONArray platformNames = new JSONArray();
-
-            // Create a comma-separated list of platform IDs for a single query
-            String platformIds = String.join(",", platforms.toList().stream().map(Object::toString).collect(Collectors.toList()));
-
-            // Modify the query to request information for all platforms at once
-            String platformQuery = "where id = (" + platformIds + "); fields name;";
-
-            try {
-                JSONArray platformInfo = request.post(platformQuery, "platforms");
-
-                for (int i = 0; i < platformInfo.length(); i++) {
-                    JSONObject platformObj = platformInfo.getJSONObject(i);
-                    platformNames.put(platformObj.get("name"));
-                }
-            } catch (UnirestException e) {
-                throw new RuntimeException(e);
-            }
-
-            return platformNames;
-        });
-
+        try {
+            JSONArray platformNames = gameInfo.getJSONArray("platforms");
+            res.put("platforms", platformNames);
+        } catch (Exception e) {
+            res.put("platforms", new JSONArray());
+        }
 
         // =============================== RELEASE DATE ===============================
-
-        long unixTime = Long.parseLong(gameInfo.get("first_release_date").toString());
-        java.util.Date time = new java.util.Date(unixTime * 1000);
-        String releaseDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(time);
-        res.put("releaseDate", releaseDate);
+        try {
+            long unixTime = Long.parseLong(gameInfo.get("first_release_date").toString());
+            java.util.Date time = new java.util.Date(unixTime * 1000);
+            String releaseDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(time);
+            res.put("releaseDate", releaseDate);
+        } catch (Exception e) {
+            res.put("releaseDate", "No release date available");
+        }
 
         // =============================== SIMILAR GAMES ===============================
-
-        CompletableFuture<JSONArray> similarGameNamesFuture = CompletableFuture.supplyAsync(() -> {
-            JSONArray similarGames = gameInfo.getJSONArray("similar_games");
-            JSONArray similarGameNames = new JSONArray();
-
-            // Create a comma-separated list of similar game IDs for a single query
-            String similarGameIds = String.join(",", similarGames.toList().stream().map(Object::toString).collect(Collectors.toList()));
-
-            // Modify the query to request information for all similar games at once
-            String similarGameQuery = "where id = (" + similarGameIds + "); fields name;";
-
-            try {
-                JSONArray similarGameInfo = request.post(similarGameQuery, "games");
-
-                for (int i = 0; i < similarGameInfo.length(); i++) {
-                    JSONObject similarGameObj = similarGameInfo.getJSONObject(i);
-                    similarGameNames.put(similarGameObj);
-                }
-            } catch (UnirestException e) {
-                throw new RuntimeException(e);
-            }
-
-            return similarGameNames;
-        });
+        try {
+            JSONArray similarGameNames = gameInfo.getJSONArray("similar_games");
+            res.put("similarGames", similarGameNames);
+        } catch (Exception e) {
+            res.put("similarGames", new JSONArray());
+        }
 
         // =============================== WEBSITES ===============================
+        try {
+            JSONArray websiteUrls = gameInfo.getJSONArray("websites");
+            res.put("websites", websiteUrls);
+        } catch (Exception e) {
+            res.put("websites", new JSONArray());
+        }
 
-        CompletableFuture<JSONArray> websiteUrlsFuture = CompletableFuture.supplyAsync(() -> {
-            JSONArray websites = gameInfo.getJSONArray("websites");
-            JSONArray websiteUrls = new JSONArray();
+        // =============================== GENRES ===============================
+        try {
+            JSONArray genres = gameInfo.getJSONArray("genres");
+            res.put("genres", genres);
+        } catch (Exception e) {
+            res.put("genres", new JSONArray());
+        }
 
-            // Create a comma-separated list of website IDs for a single query
-            String websiteIds = String.join(",", websites.toList().stream().map(Object::toString).collect(Collectors.toList()));
+        // =============================== AGE RATINGS ===============================
+        try {
+            JSONArray ageRatings = gameInfo.getJSONArray("age_ratings");
+            res.put("ageRatings", ageRatings);
+        } catch (Exception e) {
+            res.put("ageRatings", new JSONArray());
+        }
 
-            // Modify the query to request information for all websites at once
-            String websiteQuery = "where id = (" + websiteIds + "); fields url;";
+        // =============================== ARTWORKS ===============================
+        try {
+            JSONArray artworks = gameInfo.getJSONArray("artworks");
+            res.put("artworks", artworks);
+        } catch (Exception e) {
+            res.put("artworks", new JSONArray());
+        }
 
-            try {
-                JSONArray websiteInfo = request.post(websiteQuery, "websites");
+        // =============================== CATEGORY ===============================
+        try {
+            int category = gameInfo.getInt("category");
+            res.put("category", category);
+        } catch (Exception e) {
+            res.put("category", "No category available");
+        }
 
-                for (int i = 0; i < websiteInfo.length(); i++) {
-                    JSONObject websiteObj = websiteInfo.getJSONObject(i);
-                    websiteUrls.put(websiteObj.get("url"));
-                }
-            } catch (UnirestException e) {
-                throw new RuntimeException(e);
-            }
+        // =============================== SCREENSHOTS ===============================
+        try {
+            JSONArray screenshots = gameInfo.getJSONArray("screenshots");
+            res.put("screenshots", screenshots);
+        } catch (Exception e) {
+            res.put("screenshots", new JSONArray());
+        }
 
-            return websiteUrls;
-        });
 
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(platformNamesFuture, similarGameNamesFuture, websiteUrlsFuture);
-        allFutures.join();
-
-        res.put("platforms", platformNamesFuture.join());
-        res.put("similarGames", similarGameNamesFuture.join());
-        res.put("websites", websiteUrlsFuture.join());
+        // =============================== VIDEOS ===============================
+        try {
+            JSONArray videos = gameInfo.getJSONArray("videos");
+            res.put("videos", videos);
+        } catch (Exception e) {
+            res.put("videos", new JSONArray());
+        }
 
         return res;
     }

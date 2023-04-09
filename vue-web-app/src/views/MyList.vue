@@ -21,15 +21,29 @@
       <!-- Tab Contents -->
       <v-card-text>
         <v-window v-model="tab" v-if="gameDataFetched">
-
           <!-- Want To Play Tab -->
           <v-window-item value="wantToPlay">
-            <v-card v-for="game in tabs[0].games" :key="game.id" class="game-title d-flex my-3 py-1 align-center">
-              <v-card-title class="text-truncate" @click="goToGame(game.id)">{{ game.name }}</v-card-title>
+            <!-- If there are no games in this tab, display a message -->
+            <div v-if="tabs[0].games[0].status == 400" class="text-center">
+              <h3 class="text-center">No games in Want to Play</h3>
+            </div>
+
+            <v-card
+              v-else
+              v-for="game in tabs[0].games"
+              :key="game.id"
+              class="game-title d-flex my-3 py-1 align-center"
+            >
+              <v-card-title class="text-truncate" @click="goToGame(game.id)">{{
+                game.name
+              }}</v-card-title>
 
               <!-- Remove Button -->
               <v-card-actions class="ml-auto align-center">
-                <v-btn @click="removeGame(game.id)" class="removeButton my-auto">
+                <v-btn
+                  @click="removeGame(game.id)"
+                  class="removeButton my-auto"
+                >
                   <font-awesome-icon icon="trash" />
                 </v-btn>
               </v-card-actions>
@@ -38,8 +52,20 @@
 
           <!-- Playing Tab -->
           <v-window-item value="playing">
-            <v-card v-for="game in tabs[1].games" :key="game.id" class="game-title d-flex my-3">
-              <v-card-title @click="goToGame(game.id)">{{ game.name }}</v-card-title>
+            <!-- If there are no games in this tab, display a message -->
+            <div v-if="tabs[1].games[0].status == 400" class="text-center">
+              <h3 class="text-center">Not Playing any games right now</h3>
+            </div>
+
+            <v-card
+              v-else
+              v-for="game in tabs[1].games"
+              :key="game.id"
+              class="game-title d-flex my-3"
+            >
+              <v-card-title @click="goToGame(game.id)">{{
+                game.name
+              }}</v-card-title>
 
               <!-- Remove Button -->
               <v-card-actions class="ml-auto">
@@ -52,8 +78,20 @@
 
           <!-- Completed Tab -->
           <v-window-item value="completed">
-            <v-card v-for="game in tabs[2].games" :key="game.id" class="game-title d-flex my-3">
-              <v-card-title @click="goToGame(game.id)">{{ game.name }}</v-card-title>
+            <!-- If there are no games in this tab, display a message -->
+            <div v-if="tabs[2].games[0].status == 400" class="text-center">
+              <h3 class="text-center">No games Dropped</h3>
+            </div>
+
+            <v-card
+              v-else
+              v-for="game in tabs[2].games"
+              :key="game.id"
+              class="game-title d-flex my-3"
+            >
+              <v-card-title @click="goToGame(game.id)">{{
+                game.name
+              }}</v-card-title>
 
               <!-- Remove Button -->
               <v-card-actions class="ml-auto">
@@ -66,8 +104,20 @@
 
           <!-- Dropped Tab -->
           <v-window-item value="dropped">
-            <v-card v-for="game in tabs[3].games" :key="game.id" class="game-title d-flex my-3">
-              <v-card-title @click="goToGame(game.id)">{{ game.name }}</v-card-title>
+            <!-- If there are no games in this tab, display a message -->
+            <div v-if="tabs[3].games[0].status == 400" class="text-center">
+              <h3 class="text-center">No games Dropped</h3>
+            </div>
+
+            <v-card
+              v-else
+              v-for="game in tabs[3].games"
+              :key="game.id"
+              class="game-title d-flex my-3"
+            >
+              <v-card-title @click="goToGame(game.id)">{{
+                game.name
+              }}</v-card-title>
 
               <!-- Remove Button -->
               <v-card-actions class="ml-auto">
@@ -80,8 +130,20 @@
 
           <!-- On Hold Tab -->
           <v-window-item value="onHold">
-            <v-card v-for="game in tabs[4].games" :key="game.id" class="game-title d-flex my-3">
-              <v-card-title @click="goToGame(game.id)">{{ game.name }}</v-card-title>
+            <!-- If there are no games in this tab, display a message -->
+            <div v-if="tabs[4].games[0].status == 400" class="text-center">
+              <h3 class="text-center">No games On Hold</h3>
+            </div>
+
+            <v-card
+              v-else
+              v-for="game in tabs[4].games"
+              :key="game.id"
+              class="game-title d-flex my-3"
+            >
+              <v-card-title @click="goToGame(game.id)">{{
+                game.name
+              }}</v-card-title>
 
               <!-- Remove Button -->
               <v-card-actions class="ml-auto">
@@ -146,9 +208,9 @@ export default {
     async getUserData() {
       // if this.username is undefined, redirect to home page
       if (!localStorage.getItem("signInObj")) {
-        this.$emit("mustLogInAlert")
-        this.$router.push("/")
-        return false
+        this.$emit("mustLogInAlert");
+        this.$router.push("/");
+        return false;
       }
       const response = await fetch(
         "http://localhost:4040/api/users/" + this.username
@@ -213,13 +275,17 @@ export default {
         }
       }
 
-      console.log(this.tabs)
+      console.log(this.tabs);
     },
   },
 
   created: async function () {
     if (!localStorage.getItem("signInObj")) {
-      this.showAlert("You must be signed in to view this page", "error", "exclamation-triangle")
+      this.showAlert(
+        "You must be signed in to view this page",
+        "error",
+        "exclamation-triangle"
+      );
       this.$router.push("/");
     }
 
@@ -255,9 +321,9 @@ export default {
 }
 
 .removeButton {
-  background-color: #F44336;
+  background-color: #f44336;
   color: white;
-  border-radius: 10px;;
+  border-radius: 10px;
 }
 
 .game-title {
@@ -287,6 +353,5 @@ export default {
     transform: rotate(360deg);
   }
 }
-
 </style>
   

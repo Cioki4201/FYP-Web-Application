@@ -8,16 +8,53 @@ from sklearn.metrics.pairwise import cosine_similarity
 def preprocess_data(games_df):
     games_df['summary'].fillna('', inplace=True)
 
-    for col in ['genres', 'involved_companies', 'platforms']:
+    # Weights for the different features
+    genre_weight = 3
+    company_weight = 1
+    keyword_weight = 2
+    platform_weight = 1
+    perspective_weight = 1
+
+    # Preprocess involved_companies
+    games_df['involved_companies'] = games_df['involved_companies'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+    games_df['involved_companies_str'] = games_df['involved_companies'].apply(
+        lambda x: ' '.join([company['company']['name'] for company in x]) if isinstance(x, list) and all(
+            isinstance(company, dict) for company in x) else '')
+
+    # Preprocess keywords
+    games_df['keywords'] = games_df['keywords'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+    games_df['keywords_str'] = games_df['keywords'].apply(
+        lambda x: ' '.join([keyword['name'] for keyword in x]) if isinstance(x, list) and all(
+            isinstance(keyword, dict) for keyword in x) else '')
+
+    # Preprocess platforms
+    games_df['platforms'] = games_df['platforms'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+    games_df['platforms_str'] = games_df['platforms'].apply(
+        lambda x: ' '.join([platform['name'] for platform in x]) if isinstance(x, list) and all(
+            isinstance(platform, dict) for platform in x) else '')
+
+    # Preprocess player_perspectives
+    games_df['player_perspectives'] = games_df['player_perspectives'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
+    games_df['player_perspectives_str'] = games_df['player_perspectives'].apply(
+        lambda x: ' '.join([perspective['name'] for perspective in x]) if isinstance(x, list) and all(
+            isinstance(perspective, dict) for perspective in x) else '')
+
+    for col in ['genres']:
         games_df[col] = games_df[col].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
 
     games_df['genres_str'] = games_df['genres'].apply(
         lambda x: ' '.join([genre['name'] for genre in x]) if isinstance(x, list) and all(
             isinstance(genre, dict) for genre in x) else '')
 
-    games_df['summary_and_genres'] = games_df['summary'] + ' ' + games_df['genres_str']
+    games_df['summary_and_genres'] = (games_df['summary'] + ' ' +
+                                      (games_df['genres_str'] * genre_weight) + ' ' +
+                                      (games_df['involved_companies_str'] * company_weight) + ' ' +
+                                      (games_df['keywords_str'] * keyword_weight) + ' ' +
+                                      (games_df['platforms_str'] * platform_weight) + ' ' +
+                                      (games_df['player_perspectives_str'] * perspective_weight))
 
     return games_df
+
 
 # Preprocess the data and save to a file
 # games_df = pd.read_csv('game_data.csv')
@@ -26,7 +63,7 @@ def preprocess_data(games_df):
 
 
 def generate_features(games_df):
-    vectorizer = TfidfVectorizer(stop_words='english', max_features=20000)
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=30000)
     summary_genre_matrix = vectorizer.fit_transform(games_df['summary_and_genres'])
 
     return summary_genre_matrix
@@ -66,7 +103,7 @@ def main(user_games):
     remaining_games = games_df[~games_df['name'].isin(user_games)]
 
     # Sample the remaining_games
-    sampled_games = remaining_games.head(10000 - len(user_games))
+    sampled_games = remaining_games.head(20000 - len(user_games))
 
     # Concatenate user_games_df and the sampled_games
     sampled_games = pd.concat([user_games_df, sampled_games], ignore_index=True)

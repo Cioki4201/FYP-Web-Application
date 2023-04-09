@@ -43,7 +43,11 @@
         </v-btn>
 
         <!-- MyList Button -->
-        <v-btn flat @click="routeTo('/mylist/' + this.currentUsername)" v-if="loggedIn">
+        <v-btn
+          flat
+          @click="routeTo('/mylist/' + this.currentUsername)"
+          v-if="loggedIn"
+        >
           <span>
             MyList
             <font-awesome-icon icon="list" />
@@ -78,7 +82,18 @@
 
     <v-main>
       <!-- Main content area -->
-      <router-view @mustLogInAlert="showAlert('You must be Logged In to view this page', 'error', 'exclamation-triangle')"></router-view>
+      <router-view
+        @updateLoginStatus="updateLoginStatus"
+        @updateMyListPath="updateMyListPath"
+        @showLoginModal="toggleLoginModal"
+        @mustLogInAlert="
+          showAlert(
+            'You must be Logged In to view this page',
+            'error',
+            'exclamation-triangle'
+          )
+        "
+      ></router-view>
       <!-- Render the appropriate component based on the current URL -->
     </v-main>
   </v-app>
@@ -91,7 +106,7 @@
     v-if="showLoginModal"
     @closeLoginModal="toggleLoginModal"
     @changeLoginStatus="loggedIn = !loggedIn"
-    @loggedInAlert='showAlert("Logged In Successfully", "success", "check")'
+    @loggedInAlert="showAlert('Logged In Successfully', 'success', 'check')"
     @updateMyListPath="updateMyListPath"
   />
 </template>
@@ -102,7 +117,7 @@ import SignUpModal from "@/components/SignUpModal.vue";
 import LogInModal from "./components/LogInModal.vue";
 import SearchBar from "./components/search/SearchBar.vue";
 
-import { nextTick } from 'vue';
+import { nextTick } from "vue";
 
 export default {
   name: "App",
@@ -134,12 +149,16 @@ export default {
 
   methods: {
     showAlert(message, type, icon) {
-      this.alertMessage = '';
+      this.alertMessage = "";
       nextTick(() => {
         this.alertType = type;
         this.alertIcon = icon;
         this.alertMessage = message;
       });
+    },
+
+    updateLoginStatus(status) {
+      this.loggedIn = status;
     },
 
     toggleSignupModal() {
@@ -161,7 +180,7 @@ export default {
     updateMyListPath() {
       var signInObj = JSON.parse(localStorage.getItem("signInObj"));
       this.currentUsername = signInObj.username;
-      
+
       this.menuItems.map((item) => {
         if (item.title === "MyList") {
           item.path = `/mylist/${this.currentUsername}`;
@@ -173,7 +192,6 @@ export default {
     routeTo(path) {
       this.$router.push(path);
     },
-    
   },
 
   created() {
@@ -204,7 +222,6 @@ export default {
       });
     },
   },
-  
 };
 </script>
 
@@ -241,12 +258,10 @@ export default {
   color: #da0000;
   cursor: pointer;
   text-decoration: none;
-  font-family: 'Bungee Spice', cursive;
+  font-family: "Bungee Spice", cursive;
 }
 
 .logo:hover {
   text-shadow: 0 0 7px rgba(255, 132, 0, 0.5);
 }
-
-
 </style>

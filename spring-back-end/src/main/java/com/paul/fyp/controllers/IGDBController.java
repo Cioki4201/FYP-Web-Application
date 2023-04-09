@@ -45,4 +45,10 @@ public class IGDBController {
     public ResponseEntity<String> getRawGameData(@RequestBody GamesIdsDTO gamesIdsDTO) throws UnirestException {
         return igdbService.getRawGameData(gamesIdsDTO);
     }
+
+    // RETURNS RAW GAME DATA FOR A LIST OF GAME IDS
+    @PostMapping("/coverAndNames")
+    public ResponseEntity<String> getCoverAndNames(@RequestBody GamesIdsDTO gamesIdsDTO) throws UnirestException {
+        return igdbService.getGameNameCoverAndId(gamesIdsDTO);
+    }
 }

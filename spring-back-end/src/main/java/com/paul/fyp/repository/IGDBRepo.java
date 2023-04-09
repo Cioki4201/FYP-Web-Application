@@ -20,4 +20,7 @@ public interface IGDBRepo {
 
     ResponseEntity<String> getRawGameData(GamesIdsDTO gameID) throws UnirestException;
 
+    ResponseEntity<String> getGameNameCoverAndId(GamesIdsDTO gameIDs) throws UnirestException;
+
+
 }

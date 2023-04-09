@@ -203,4 +203,31 @@ public class IGDBService implements IGDBRepo {
 
         return new ResponseEntity<>(returnBody.toString(), HttpStatus.OK);
     }
+
+    @Override
+    public ResponseEntity<String> getGameNameCoverAndId(GamesIdsDTO gameIDs) throws UnirestException {
+        // get all game ids and store them in a string, divided by commas
+        String gameIDsString = String.join(",", gameIDs.getGameIDs());
+
+        String query = "where id = (" + gameIDsString + "); fields name, cover.image_id, id;";
+
+        JSONArray returnBody = request.post(query, "games");
+
+        // Process the returnBody to convert image_id to the required format
+        for (int i = 0; i < returnBody.length(); i++) {
+            JSONObject gameObject = returnBody.getJSONObject(i);
+            try {
+                String image_id = gameObject.getJSONObject("cover").getString("image_id");
+                String imageUrl = "https://images.igdb.com/igdb/image/upload/t_cover_big/" + image_id + ".jpg";
+                gameObject.put("coverImageUrl", imageUrl);
+                gameObject.remove("cover");
+            } catch (Exception e) {
+                gameObject.put("coverImageUrl", "https://publications.iarc.fr/uploads/media/default/0001/02/thumb_1205_default_publication.jpeg");
+            }
+        }
+
+        return new ResponseEntity<>(returnBody.toString(), HttpStatus.OK);
+    }
+
+
 }

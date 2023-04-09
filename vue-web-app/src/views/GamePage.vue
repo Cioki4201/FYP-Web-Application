@@ -289,6 +289,7 @@ export default {
       console.log("No Artworks");
     }
 
+
     try {
       for (let i = 0; i < this.gameDetails.screenshots.length; i++) {
         this.gameDetails.screenshots[i] =
@@ -301,18 +302,17 @@ export default {
     }
 
     // From similarGames, remove the games that have no cover image id
-    for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
-      if (this.gameDetails.similarGames[i].cover == null) {
-        this.gameDetails.similarGames.splice(i, 1);
-      }
-    }
+    this.gameDetails.similarGames = this.gameDetails.similarGames.filter(game => game.hasOwnProperty("cover"));
 
     for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
+      console.log(this.gameDetails.similarGames[i].cover.image_id)
       this.gameDetails.similarGames[i].cover =
         "https://images.igdb.com/igdb/image/upload/t_cover_big/" +
         this.gameDetails.similarGames[i].cover.image_id +
         ".jpg";
     }
+
+    console.log("Similar Games Done")
 
     try {
       // Processing Video url(s)
@@ -324,6 +324,8 @@ export default {
     } catch (error) {
       console.log("No Videos");
     }
+
+    console.log("Videos Done")
 
     // Round Rating to no decimal places
     this.gameDetails.rating = Math.round(this.gameDetails.rating);

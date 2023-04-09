@@ -5,7 +5,7 @@ import time
 def fetch_games(offset):
     url = 'https://api.igdb.com/v4/games'
     query = f'''
-    fields id, name, total_rating, total_rating_count, category, genres.name, platforms.name, involved_companies.company.name, summary;
+    fields id, name, total_rating, total_rating_count, category, genres.name, platforms.name, involved_companies.company.name, summary, player_perspectives.name, keywords.name;
     where release_dates.date > 978307200 & total_rating != null;
     sort release_dates.date asc;
     limit 500;

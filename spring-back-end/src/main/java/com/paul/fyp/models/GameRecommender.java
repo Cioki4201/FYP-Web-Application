@@ -31,6 +31,7 @@ public class GameRecommender {
         HttpResponse<String> httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
         String responseBody = httpResponse.body();
+
         JSONArray jsonArray = new JSONArray(responseBody); // Parse the response body as a JSONArray
         List<Integer> recommendedGameIds = new ArrayList<>();
 

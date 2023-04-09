@@ -12,47 +12,41 @@
     </div>
 
     <div class="game-recommendations">
-      <h1>Recommendations</h1>
-      <v-container>
+      <h1>Recommendations for you</h1>
+      <v-container v-if="this.loginStatus">
         <v-row>
-          <v-col cols="12" sm="6" md="4" lg="3">
-            <v-card class="game-card">
-              <v-img
-                src="https://external-preview.redd.it/zzgctwJ58xJ6cSerODdCReYJ27-99SoD5RpyFl0Lf1o.png?auto=webp&s=0f04ccc0d9bbfb455cccda349c26ae9e7dc0e4f2"
-              />
-              <v-card-title>To Be Implemented...</v-card-title>
-            </v-card>
-          </v-col>
-          <v-col cols="12" sm="6" md="4" lg="3">
-            <v-card class="game-card">
-              <v-img
-                src="https://external-preview.redd.it/zzgctwJ58xJ6cSerODdCReYJ27-99SoD5RpyFl0Lf1o.png?auto=webp&s=0f04ccc0d9bbfb455cccda349c26ae9e7dc0e4f2"
-              />
-              <v-card-title>To Be Implemented...</v-card-title>
-            </v-card>
-          </v-col>
-          <v-col cols="12" sm="6" md="4" lg="3">
-            <v-card class="game-card">
-              <v-img
-                src="https://external-preview.redd.it/zzgctwJ58xJ6cSerODdCReYJ27-99SoD5RpyFl0Lf1o.png?auto=webp&s=0f04ccc0d9bbfb455cccda349c26ae9e7dc0e4f2"
-              />
-              <v-card-title>To Be Implemented...</v-card-title>
-            </v-card>
-          </v-col>
-          <v-col cols="12" sm="6" md="4" lg="3">
-            <v-card class="game-card">
-              <v-img
-                src="https://external-preview.redd.it/zzgctwJ58xJ6cSerODdCReYJ27-99SoD5RpyFl0Lf1o.png?auto=webp&s=0f04ccc0d9bbfb455cccda349c26ae9e7dc0e4f2"
-              />
-              <v-card-title>To Be Implemented...</v-card-title>
+          <v-col
+            v-for="game in this.recommendedGames"
+            :key="game.id"
+            cols="12"
+            sm="6"
+            md="3"
+            lg="3"
+          >
+            <v-card @click="goToGamePage(game.id)" class="game-card">
+              <v-img :src="game.coverImageUrl" />
+              <v-card-title style="font-size: 1rem">{{
+                game.name
+              }}</v-card-title>
             </v-card>
           </v-col>
         </v-row>
       </v-container>
+
+      <v-container v-else>
+        <h3>You must Log in to receive personalised recommendations!</h3>
+        <br />
+        <button @click="emitLogInModal" class="logInBtn">Log In</button>
+      </v-container>
     </div>
 
     <!-- Alert -->
-    <AutoFadeAlert :message="alertMessage" type="error" icon="info-circle" />
+    <AutoFadeAlert
+      :message="alertMessage"
+      :type="alertType"
+      :icon="alertIcon"
+    />
+
   </div>
 </template>
 
@@ -61,21 +55,50 @@ import { nextTick } from "vue";
 
 export default {
   name: "HomeView",
+
+  emits: ["showLoginModal", "updateLoginStatus"],
+
   data() {
     return {
       showModal: false,
       alertMessage: "",
       recommendedGames: [],
       loginStatus: false,
+      showLoginModal: false,
+
+      alertType: "",
+      alertIcon: "",
+      alertMessage: "",
     };
   },
-  components: {},
+
+  components: {  },
+
+  watch: {
+    loginStatus: function (newVal, oldVal) {
+      if (newVal) {
+        this.getUserRecommendedGames();
+      }
+      this.$emit("updateLoginStatus", newVal);
+    },
+  },
+
   methods: {
-    showAlert(message) {
+    showAlert(message, type, icon) {
       this.alertMessage = "";
       nextTick(() => {
+        this.alertType = type;
+        this.alertIcon = icon;
         this.alertMessage = message;
       });
+    },
+
+    goToGamePage(gameId) {
+      this.$router.push({ path: `/game/${gameId}` });
+    },
+
+    emitLogInModal() {
+      this.$emit("showLoginModal");
     },
 
     async getUserRecommendedGames() {
@@ -89,7 +112,28 @@ export default {
         const recommendedGames = await response.json();
 
         this.recommendedGames = recommendedGames;
-        console.log(this.recommendedGames)
+
+        // Handling all the recommended game ID's so that they can be displayed
+        const requestBody = {
+          gameIDs: this.recommendedGames,
+        };
+
+        const requestOptions = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        };
+
+        // Send a single request with the requestBody containing all coverIds
+        const coverResponse = await fetch(
+          "http://localhost:4040/api/igdb/coverAndNames",
+          requestOptions
+        );
+
+        const gameRecommendations = await coverResponse.json();
+        this.recommendedGames = gameRecommendations;
+
+        console.log(this.recommendedGames);
       } catch (error) {
         console.log(error);
       }
@@ -166,5 +210,22 @@ export default {
 .game-card:hover {
   border: var(--orange) 5px solid;
   box-shadow: 0 0 30px var(--orange);
+}
+
+.logInBtn {
+  background-color: var(--orange);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 1.3rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: 300ms;
+}
+
+.logInBtn:hover {
+  box-shadow: 0 0 16px rgba(255, 123, 0, 0.4);
+  background-color: #ff8c00;
 }
 </style>

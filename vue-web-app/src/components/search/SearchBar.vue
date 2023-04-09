@@ -1,4 +1,7 @@
 <template>
+  <!-- Alert -->
+  <AutoFadeAlert :message="alertMessage" :type="alertType" :icon="alertIcon" />
+
   <div class="search-bar">
     <input
       type="text"
@@ -22,6 +25,8 @@
 <script>
 import SearchResults from "./SearchResults.vue";
 
+import { nextTick } from 'vue';
+
 export default {
   components: {
     SearchResults,
@@ -33,73 +38,99 @@ export default {
       searchResult: null,
       imagesFetched: false,
       searching: false,
+
+      // Alert Data
+      alertMessage: "",
+      alertType: "",
+      alertIcon: "",
     };
   },
   methods: {
+    showAlert(message, type, icon) {
+      this.alertMessage = '';
+      nextTick(() => {
+        this.alertType = type;
+        this.alertIcon = icon;
+        this.alertMessage = message;
+      });
+    },
+
     async search() {
       this.imagesFetched = false;
       this.searching = true;
 
-      // Call an API or perform a search action with the search text
-      const response = await fetch(
-        "http://localhost:4040/api/igdb/search/" + this.searchText
-      );
-      const games = await response.json();
+      try {
+        // Call an API or perform a search action with the search text
+        const response = await fetch(
+          "http://localhost:4040/api/igdb/search/" + this.searchText
+        );
 
-      this.searchResult = games;
-
-      // if a game does not have a cover ID remove it from the list
-      this.searchResult = this.searchResult.filter((game) => game.cover);
-
-      // fetch the cover image for each game and store it in a list
-      let coverIds = this.searchResult.map((game) => game.cover);
-
-      // Create a JSON object with a key 'coverIDs' containing the coverIds array
-      const requestBody = {
-        coverIDs: coverIds,
-      };
-
-      // Getting the cover URLS for each search result
-
-      const requestOptions = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      };
-
-      // Send a single request with the requestBody containing all coverIds
-      const coverResponse = await fetch(
-        "http://localhost:4040/api/igdb/cover/",
-        requestOptions
-      );
-      const coverUrls = await coverResponse.json();
-
-      // Replace the game cover with the corresponding URL
-      this.searchResult.forEach((game) => {
-        const coverInfo = coverUrls.find((cover) => cover.game === game.id);
-        if (coverInfo) {
-          game.coverUrl = coverInfo.url;
-        } else {
-          console.log("Cover not found for game ID:", game.id);
+        if (response.status != 200) {
+          alert("Error: " + response.status);
+          return;
         }
-      });
 
-      this.imagesFetched = true;
-      this.searching = false;
-      console.log("Search Results Updated");
+        const games = await response.json();
 
-      this.$router.push({
-        name: "SearchResultsView",
-        query: {
-          games: JSON.stringify(this.searchResult),
-          imagesFetched: JSON.stringify(this.imagesFetched),
-          searching: JSON.stringify(this.searching),
-        },
-      });
+        this.searchResult = games;
 
-      setTimeout(function () {
-        window.location.reload();
-      }, 10);
+        // if a game does not have a cover ID remove it from the list
+        this.searchResult = this.searchResult.filter((game) => game.cover);
+
+        // fetch the cover image for each game and store it in a list
+        let coverIds = this.searchResult.map((game) => game.cover);
+
+        // Create a JSON object with a key 'coverIDs' containing the coverIds array
+        const requestBody = {
+          coverIDs: coverIds,
+        };
+
+        // Getting the cover URLS for each search result
+
+        const requestOptions = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        };
+
+        // Send a single request with the requestBody containing all coverIds
+        const coverResponse = await fetch(
+          "http://localhost:4040/api/igdb/cover/",
+          requestOptions
+        );
+        const coverUrls = await coverResponse.json();
+
+        // Replace the game cover with the corresponding URL
+        this.searchResult.forEach((game) => {
+          const coverInfo = coverUrls.find((cover) => cover.game === game.id);
+          if (coverInfo) {
+            game.coverUrl = coverInfo.url;
+          } else {
+            console.log("Cover not found for game ID:", game.id);
+          }
+        });
+
+        this.imagesFetched = true;
+        this.searching = false;
+        console.log("Search Results Updated");
+
+        this.$router.push({
+          name: "SearchResultsView",
+          query: {
+            games: JSON.stringify(this.searchResult),
+            imagesFetched: JSON.stringify(this.imagesFetched),
+            searching: JSON.stringify(this.searching),
+          },
+        });
+
+        setTimeout(function () {
+          window.location.reload();
+        }, 10);
+      } catch (error) {
+        this.searching = false;
+        this.showAlert("No results found for: '" + this.searchText + "'", "error", "face-surprise");
+        this.searchText = "";
+      }
     },
   },
 };

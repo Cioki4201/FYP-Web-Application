@@ -4,63 +4,134 @@
 
   <div v-if="dataLoaded">
     <div class="artwork-background" :style="backgroundStyle">
-      <h1>{{ gameDetails.name }}</h1>
-      <div class="cover-title-add">
-        
-        <br />
-        <v-img :src="gameDetails.coverUrl" width="200px" class="cover-image"/> <br />
+      <div class="cover-screenshots">
+        <div>
+          <h1 id="TITLE">
+            {{ gameDetails.name }}
+            <br />
+          </h1>
+          <span class="rating" :style="ratingStyle">
+            {{ gameDetails.rating }}
+          </span>
+          <br />
 
-        <!-- Add Game to MyList -->
-        <v-menu>
-          <template v-slot:activator="{ props }">
-            <v-btn color="orange" v-bind="props"> Add Game to MyList </v-btn>
-          </template>
-          <v-list>
-            <v-list-item
-              v-for="(item, index) in menuItems"
+          <div class="cover-title-add">
+            <br />
+            <v-img
+              :src="gameDetails.coverUrl"
+              width="200px"
+              class="cover-image"
+            />
+            <h4 id="release-date">
+              Release Date: {{ gameDetails.releaseDate }}
+            </h4>
+            <br />
+
+            <!-- Add Game to MyList -->
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn v-bind="props" class="add-game-btn">
+                  <font-awesome-icon icon="plus" />
+                   Add Game to MyList
+                </v-btn>
+              </template>
+              <v-list>
+                <v-list-item
+                  v-for="(item, index) in menuItems"
+                  :key="index"
+                  :value="index"
+                >
+                  <v-list-item-title @click="addGameToMyList(item.value)">{{
+                    item.label
+                  }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+          </div>
+
+          <br />
+
+          <span
+            class="genre-tag"
+            v-for="(genre, index) in gameDetails.genres"
+            :key="index"
+          >
+            {{ genre.name }}
+          </span>
+        </div>
+
+        <div class="carousel" v-if="gameDetails.screenshots.length != 0">
+          <Swiper :slides-per-view="1" :loop="true" autoplay>
+            <SwiperSlide
+              v-for="(screenshot, index) in gameDetails.screenshots"
               :key="index"
-              :value="index"
             >
-              <v-list-item-title @click="addGameToMyList(item.value)">{{
-                item.label
-              }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
+              <img :src="screenshot" alt="Screenshot" />
+            </SwiperSlide>
+          </Swiper>
+          <p>Screenshots</p>
+        </div>
       </div>
     </div>
 
-    <h3>Storyline</h3>
-    <p>{{ gameDetails.storyline }}</p>
-    <br />
+    <div class="game-info">
+      <div class="summary-platforms">
+        <div class="summary">
+          <h2>Summary</h2>
+          <p>{{ gameDetails.summary }}</p>
+        </div>
 
-    <h3>Summary</h3>
-    <p>{{ gameDetails.summary }}</p>
-    <br />
+        <div class="platforms">
+          <h2>Platforms</h2>
+          <ul v-if="gameDetails.platforms.length != 0">
+            <li v-for="platform in gameDetails.platforms" :key="platform.id">
+              {{ platform.name }}
+            </li>
+          </ul>
+          <p v-else>No Platforms Found</p>
+        </div>
+      </div>
 
-    <h3>Rating</h3>
-    <p>{{ gameDetails.rating }}</p>
-    <br />
+      <div class="websites-video">
+        <div class="websites">
+          <h2>Websites</h2>
+          <ul>
+            <li v-for="website in gameDetails.websites" :key="website.id">
+              <a :href="website.url" target="_blank">{{ website.url }}</a>
+            </li>
+          </ul>
+        </div>
 
-    <h3>Rating Count</h3>
-    <p>{{ gameDetails.rating_count }}</p>
-    <br />
+        <iframe
+          v-if="gameDetails.videos.length != 0"
+          class="video"
+          :src="gameDetails.videos[0]"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
 
-    <h3>Platforms</h3>
-    <p>{{ gameDetails.platforms }}</p>
-    <br />
-
-    <h3>Release Date</h3>
-    <p>{{ gameDetails.releaseDate }}</p>
-    <br />
-
-    <h3>Websites</h3>
-    <p>{{ gameDetails.websites }}</p>
-    <br />
-
-    <h3>Similar Games</h3>
-    <div v-for="game in gameDetails.similarGames" :key="game.id">
-      <h4 @click="goToGamePage(game.id)" id="similarGame">{{ game.name }}</h4>
+      <div class="similar-games">
+        <h2>Similar Games</h2>
+        <v-row>
+          <v-col
+            v-for="game in gameDetails.similarGames"
+            :key="game.id"
+            cols="12"
+            sm="6"
+            md="3"
+            lg="2"
+          >
+            <v-card @click="goToGamePage(game.id)" class="game-card">
+              <v-img :src="game.cover" />
+              <v-card-title style="font-size: 1rem">{{
+                game.name
+              }}</v-card-title>
+            </v-card>
+          </v-col>
+        </v-row>
+      </div>
     </div>
   </div>
 
@@ -70,8 +141,11 @@
   </div>
 </template>
 
+<!-- ================================================== SCRIPTS ================================================== -->
+
 <script>
 import { nextTick } from "vue";
+import { Swiper, SwiperSlide } from "swiper/vue";
 
 export default {
   name: "GamePage",
@@ -81,6 +155,12 @@ export default {
       default: "",
     },
   },
+
+  components: {
+    Swiper,
+    SwiperSlide,
+  },
+
   emits: ["mustLogInAlert"],
 
   data() {
@@ -117,6 +197,15 @@ export default {
       });
     },
 
+    goToGamePage(gameId) {
+      this.$router.push({ path: `/game/${gameId}` });
+    },
+
+    handlePopstate() {
+      // Force reload when user uses the back or forward button
+      window.location.reload();
+    },
+
     // function that gets game info from the API and returns it as a JSON object
     async getGameInfo() {
       const response = await fetch(
@@ -138,7 +227,11 @@ export default {
     async addGameToMyList(listIndex) {
       // Get the current user's username from the session storage
       if (localStorage.getItem("signInObj") == null) {
-        alert("Please sign in to add games to your list.");
+        this.showAlert(
+          "Please Log In to add games to your list.",
+          "error",
+          "right-to-bracket"
+        );
         return;
       } else {
         let currentUser = localStorage.getItem("signInObj");
@@ -185,18 +278,33 @@ export default {
     this.gameDetails.coverUrl = coverObj[0].url;
 
     // Processing artwork/screenshot/similar game cover url(s)
-    for (let i = 0; i < this.gameDetails.artworks.length; i++) {
-      this.gameDetails.artworks[i] =
-        "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
-        this.gameDetails.artworks[i].image_id +
-        ".jpg";
+    try {
+      for (let i = 0; i < this.gameDetails.artworks.length; i++) {
+        this.gameDetails.artworks[i] =
+          "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
+          this.gameDetails.artworks[i].image_id +
+          ".jpg";
+      }
+    } catch (error) {
+      console.log("No Artworks");
     }
 
-    for (let i = 0; i < this.gameDetails.screenshots.length; i++) {
-      this.gameDetails.screenshots[i] =
-        "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
-        this.gameDetails.screenshots[i].image_id +
-        ".jpg";
+    try {
+      for (let i = 0; i < this.gameDetails.screenshots.length; i++) {
+        this.gameDetails.screenshots[i] =
+          "https://images.igdb.com/igdb/image/upload/t_screenshot_huge/" +
+          this.gameDetails.screenshots[i].image_id +
+          ".jpg";
+      }
+    } catch (error) {
+      console.log("No Screenshots");
+    }
+
+    // From similarGames, remove the games that have no cover image id
+    for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
+      if (this.gameDetails.similarGames[i].cover == null) {
+        this.gameDetails.similarGames.splice(i, 1);
+      }
     }
 
     for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
@@ -206,54 +314,92 @@ export default {
         ".jpg";
     }
 
-    // Processing Video url(s)
-    for (let i = 0; i < this.gameDetails.videos.length; i++) {
-      this.gameDetails.videos[i] =
-        "https://www.youtube.com/embed/" + this.gameDetails.videos[i].video_id;
+    try {
+      // Processing Video url(s)
+      for (let i = 0; i < this.gameDetails.videos.length; i++) {
+        this.gameDetails.videos[i] =
+          "https://www.youtube.com/embed/" +
+          this.gameDetails.videos[i].video_id;
+      }
+    } catch (error) {
+      console.log("No Videos");
     }
+
+    // Round Rating to no decimal places
+    this.gameDetails.rating = Math.round(this.gameDetails.rating);
 
     console.log(this.gameDetails);
 
     this.dataLoaded = true;
   },
 
-  computed: {
-  backgroundStyle() {
-    if (this.gameDetails && this.gameDetails.artworks.length > 0) {
-      var lastArtwork = this.gameDetails.artworks.length - 1;
-      return {
-        "--background-image": `url('${this.gameDetails.artworks[lastArtwork]}')`,
-      };
-    } else {
-      return {
-        "--background-image": `url(${require("@/assets/default-orange-background.jpg")})`,
-      };
-    }
+  mounted() {
+    window.addEventListener("popstate", this.handlePopstate);
   },
-},
+
+  beforeDestroy() {
+    window.removeEventListener("popstate", this.handlePopstate);
+  },
+
+  computed: {
+    backgroundStyle() {
+      if (this.gameDetails && this.gameDetails.artworks.length > 0) {
+        var lastArtwork = this.gameDetails.artworks.length - 1;
+        return {
+          "--background-image": `url('${this.gameDetails.artworks[lastArtwork]}')`,
+        };
+      } else {
+        return {
+          "--background-image": `url(${require("@/assets/default-orange-background.jpg")})`,
+        };
+      }
+    },
+
+    ratingStyle() {
+      if (this.gameDetails && this.gameDetails.rating) {
+        const gameRating = this.gameDetails.rating;
+
+        if (gameRating > 80) {
+          return "background-color: green; box-shadow: 0 0 15px green;";
+        } else if (gameRating > 60) {
+          return "background-color: yellow; box-shadow: 0 0 15px yellow;";
+        } else if (gameRating > 40) {
+          return "background-color: orange; box-shadow: 0 0 15px orange;";
+        } else if (gameRating < 20) {
+          return "background-color: red; box-shadow: 0 0 15px red;";
+        }
+      } else {
+        return "display: none;";
+      }
+    },
+  },
 };
 </script>
   
-<style>
+<!-- ================================================== STYLES ================================================== -->
+
+<style scoped>
 #similarGame {
   cursor: pointer;
   color: rgb(60, 0, 0);
 }
 
-.loading-spinner {
-  border: 5px solid rgba(0, 0, 0, 0.1);
-  border-left-color: #007bff;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin: auto;
+#TITLE {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 1);
 }
 
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
+#release-date {
+  display: inline-block;
+  margin-left: 0.4rem;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 1);
+  color: white;
+}
+
+.add-game-btn {
+  border-radius: ;
 }
 
 .artwork-background {
@@ -289,5 +435,185 @@ export default {
   flex-direction: column;
   align-items: center;
   width: fit-content;
+}
+
+.swiper-slide img {
+  max-width: 100%;
+}
+
+.carousel {
+  width: 40%;
+  text-align: center;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.7);
+  background-color: var(--dark);
+  padding: 1rem;
+}
+
+.cover-screenshots {
+  display: flex;
+  align-items: center;
+  gap: 25rem;
+}
+
+.rating {
+  border-radius: 50%;
+  color: black;
+  padding: 2%;
+  font-size: 1.5rem;
+  text-align: center;
+  font-weight: 900;
+  text-shadow: none;
+  margin-right: 1rem;
+}
+
+/* Game Details */
+
+.summary-platforms {
+  display: flex;
+  gap: 3rem;
+  padding: 3rem;
+}
+
+.summary-platforms h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 136, 0, 0.7);
+}
+
+.summary-platforms p {
+  font-size: 1.2rem;
+}
+
+.summary {
+  background-color: var(--dark);
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow: rgba(255, 128, 0, 0.6) 0px 0px 30px 0px;
+  outline: 4px solid var(--orange);
+  width: 80%;
+}
+
+.platforms {
+  background-color: var(--dark);
+  padding: 2rem;
+  width: 20%;
+  border-radius: 2rem;
+  box-shadow: rgba(255, 128, 0, 0.6) 0px 0px 30px 0px;
+  outline: 4px solid var(--orange);
+  text-align: center;
+}
+
+.platforms ul {
+  list-style: none;
+  padding: 0;
+}
+
+.genre-tag {
+  display: inline-block;
+  padding: 8px 12px;
+  background-color: var(--orange);
+  color: #fff;
+  border-radius: 2rem;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  margin-right: 0.6rem;
+}
+
+.genre-tag:hover {
+  background-color: #ec7200;
+  cursor: default;
+}
+
+.websites-video {
+  display: flex;
+  gap: 3rem;
+  padding: 3rem;
+}
+
+.websites-video h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 136, 0, 0.7);
+}
+
+.websites {
+  background-color: var(--dark);
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow: rgba(255, 128, 0, 0.6) 0px 0px 30px 0px;
+  outline: 4px solid var(--orange);
+  width: 35%;
+  overflow: hidden;
+}
+
+.websites ul {
+  text-align: center;
+  list-style: none;
+  padding: 0;
+}
+
+.websites ul li {
+  margin: 0.5rem 0;
+}
+
+.websites ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.2rem;
+  transition: 0.3s;
+}
+
+.websites ul li a:hover {
+  text-decoration: none;
+  color: rgb(245, 148, 21);
+  text-shadow: 0 0 5px rgba(255, 136, 0, 0.5);
+  font-size: 1.23rem;
+}
+
+.video {
+  border-radius: 2rem;
+  box-shadow: rgba(255, 128, 0, 0.6) 0px 0px 30px 0px;
+  outline: 4px solid var(--orange);
+  width: 65%;
+}
+
+.game-card {
+  border: var(--orange) 4px solid;
+  margin: 10px;
+  border-radius: 20px;
+  box-shadow: 0 0 15px var(--orange);
+}
+
+.game-card:hover {
+  border: var(--orange) 5px solid;
+  box-shadow: 0 0 30px var(--orange);
+}
+
+.similar-games {
+  width: 80%;
+  margin: 4rem auto;
+
+  background-color: var(--dark);
+  padding: 2rem;
+  border-radius: 2rem;
+  box-shadow: rgba(255, 128, 0, 0.6) 0px 0px 30px 0px;
+  outline: 4px solid var(--orange);
+  text-align: center;
+}
+
+.similar-games h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 136, 0, 0.7);
 }
 </style>

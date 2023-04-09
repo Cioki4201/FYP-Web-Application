@@ -32,7 +32,7 @@ def generate_features(games_df):
     return summary_genre_matrix
 
 
-def recommend_games(user_game_ids, games_df, summary_genre_matrix, top_n=5, min_rating=70, min_rating_count=20):
+def recommend_games(user_game_ids, games_df, summary_genre_matrix, top_n=5, min_rating=60, min_rating_count=20):
     user_game_indices = games_df[games_df['id'].isin(user_game_ids)].index
     user_game_matrix = summary_genre_matrix[user_game_indices]
 

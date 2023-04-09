@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
@@ -80,6 +82,16 @@ public class UserController {
         userJSON.put("games", gamesJSON);
 
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(userJSON.toString());
+    }
+
+//    Get user's recommended games
+    @GetMapping(value = "/{username}/recommended", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getRecommendedGames(@PathVariable("username") String username) {
+        User user = userRepository.findByUsername(username).get();
+
+        List<Integer> gamesJSON = user.getRecommendedGames();
+
+        return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(gamesJSON.toString());
     }
 
 

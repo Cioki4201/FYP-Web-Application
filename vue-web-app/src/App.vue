@@ -210,6 +210,23 @@ export default {
 
 
 <style>
+/* Loading Icon */
+.loading-spinner {
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: auto;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .nav-bar {
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.26);
   background-color: var(--darker);
@@ -231,7 +248,5 @@ export default {
   text-shadow: 0 0 7px rgba(255, 132, 0, 0.5);
 }
 
-body {
-  background-color: blue;
-}
+
 </style>

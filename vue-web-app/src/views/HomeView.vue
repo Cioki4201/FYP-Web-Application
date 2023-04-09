@@ -65,6 +65,8 @@ export default {
     return {
       showModal: false,
       alertMessage: "",
+      recommendedGames: [],
+      loginStatus: false,
     };
   },
   components: {},
@@ -75,6 +77,31 @@ export default {
         this.alertMessage = message;
       });
     },
+
+    async getUserRecommendedGames() {
+      var signInObj = JSON.parse(localStorage.getItem("signInObj"));
+      let currentUsername = signInObj.username;
+
+      try {
+        const response = await fetch(
+          "http://localhost:4040/api/users/" + currentUsername + "/recommended"
+        );
+        const recommendedGames = await response.json();
+
+        this.recommendedGames = recommendedGames;
+        console.log(this.recommendedGames)
+      } catch (error) {
+        console.log(error);
+      }
+    },
+  },
+
+  async created() {
+    // check if user is logged in
+    if (localStorage.getItem("signInObj")) {
+      this.loginStatus = true;
+      await this.getUserRecommendedGames();
+    }
   },
 };
 </script>

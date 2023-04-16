@@ -24,7 +24,7 @@
           <!-- Want To Play Tab -->
           <v-window-item value="wantToPlay">
             <!-- If there are no games in this tab, display a message -->
-            <div v-if="tabs[0].games[0].status == 400" class="text-center">
+            <div v-if="tabs[0].games.length == 0" class="text-center">
               <h3 class="text-center">No games in Want to Play</h3>
             </div>
 
@@ -53,7 +53,7 @@
           <!-- Playing Tab -->
           <v-window-item value="playing">
             <!-- If there are no games in this tab, display a message -->
-            <div v-if="tabs[1].games[0].status == 400" class="text-center">
+            <div v-if="tabs[1].games.length == 0" class="text-center">
               <h3 class="text-center">Not Playing any games right now</h3>
             </div>
 
@@ -79,7 +79,7 @@
           <!-- Completed Tab -->
           <v-window-item value="completed">
             <!-- If there are no games in this tab, display a message -->
-            <div v-if="tabs[2].games[0].status == 400" class="text-center">
+            <div v-if="tabs[2].games.length == 0" class="text-center">
               <h3 class="text-center">No games Dropped</h3>
             </div>
 
@@ -105,7 +105,7 @@
           <!-- Dropped Tab -->
           <v-window-item value="dropped">
             <!-- If there are no games in this tab, display a message -->
-            <div v-if="tabs[3].games[0].status == 400" class="text-center">
+            <div v-if="tabs[3].games.length == 0" class="text-center">
               <h3 class="text-center">No games Dropped</h3>
             </div>
 
@@ -131,7 +131,7 @@
           <!-- On Hold Tab -->
           <v-window-item value="onHold">
             <!-- If there are no games in this tab, display a message -->
-            <div v-if="tabs[4].games[0].status == 400" class="text-center">
+            <div v-if="tabs[4].games.length == 0" class="text-center">
               <h3 class="text-center">No games On Hold</h3>
             </div>
 
@@ -218,6 +218,8 @@ export default {
       const data = await response.json();
       this.userData = data;
 
+      console.log(this.userData)
+
       // assign games to tabs
       this.tabs[0].games = this.userData.games[0];
       this.tabs[1].games = this.userData.games[1];
@@ -246,12 +248,6 @@ export default {
     },
 
     async removeGame(gameID) {
-      console.log(
-        "http://localhost:4040/api/users/" +
-          this.username +
-          "/remove_game/" +
-          gameID
-      );
       const response = await fetch(
         "http://localhost:4040/api/users/" +
           this.username +
@@ -274,8 +270,6 @@ export default {
           }
         }
       }
-
-      console.log(this.tabs);
     },
   },
 
@@ -294,6 +288,10 @@ export default {
     await this.getUserData();
 
     for (let i = 0; i < this.tabs.length; i++) {
+      if (this.tabs[i].games.length == 0) {
+        continue;
+      }
+
       this.tabs[i].games = await this.getGames(this.tabs[i].games);
     }
 

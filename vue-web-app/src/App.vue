@@ -173,8 +173,12 @@ export default {
       localStorage.removeItem("signInObj");
       this.loggedIn = false;
       console.log("Successfully logged out");
-      this.showAlert("Logged Out...", "info", "check-circle");
+      this.showAlert("Logging Out...", "info", "check-circle");
       this.$router.push("/");
+      // wait 1.5 second and then refresh the page
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
     },
 
     updateMyListPath() {
@@ -186,6 +190,11 @@ export default {
           item.path = `/mylist/${this.currentUsername}`;
         }
       });
+
+      this.showAlert("Logging In...", "info", "check-circle");
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
     },
 
     // Route to page with path as input

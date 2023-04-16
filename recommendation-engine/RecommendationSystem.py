@@ -1,125 +1,118 @@
 import ast
 import pandas as pd
 import sys
+import os
+import numpy as np
+import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from functools import lru_cache
 
+WEIGHTS = {
+    'genre_weight': 3,
+    'involved_companies_weight': 1,
+    'keywords_weight': 1,
+    'platforms_weight': 1,
+    'player_perspectives_weight': 1
+}
+
+def parse_list_of_dicts(x):
+    return ast.literal_eval(x) if isinstance(x, str) else x
+
+def join_names(lst):
+    return ' '.join([item.get('name', '') for item in lst]) if isinstance(lst, list) and all(isinstance(item, dict) for item in lst) else ''
+
+
+@lru_cache(maxsize=None)
+def get_games_df():
+    if not os.path.exists('preprocessed_game_data.csv'):
+        raw_games_df = pd.read_csv('game_data.csv')
+        preprocessed_games_df = preprocess_data(raw_games_df)
+        preprocessed_games_df.to_csv('preprocessed_game_data.csv', index=False)
+
+    return pd.read_csv('preprocessed_game_data.csv')
 
 def preprocess_data(games_df):
+    list_columns = ['involved_companies', 'keywords', 'platforms', 'player_perspectives', 'genres']
+
+    for col in list_columns:
+        games_df[col] = games_df[col].apply(parse_list_of_dicts)
+        if col != 'genres':
+            games_df[f"{col}_str"] = games_df[col].apply(join_names)
+            games_df[f"{col}_weighted"] = games_df[f"{col}_str"] * WEIGHTS[f"{col}_weight"]
+
     games_df['summary'].fillna('', inplace=True)
+    games_df['genres_str'] = games_df['genres'].apply(join_names)
+    games_df['summary_and_genres'] = (games_df['summary'] + ' ' + (games_df['genres_str'] * WEIGHTS['genre_weight']))
 
-    # Weights for the different features
-    genre_weight = 3
-    company_weight = 1
-    keyword_weight = 2
-    platform_weight = 1
-    perspective_weight = 1
-
-    # Preprocess involved_companies
-    games_df['involved_companies'] = games_df['involved_companies'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-    games_df['involved_companies_str'] = games_df['involved_companies'].apply(
-        lambda x: ' '.join([company['company']['name'] for company in x]) if isinstance(x, list) and all(
-            isinstance(company, dict) for company in x) else '')
-
-    # Preprocess keywords
-    games_df['keywords'] = games_df['keywords'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-    games_df['keywords_str'] = games_df['keywords'].apply(
-        lambda x: ' '.join([keyword['name'] for keyword in x]) if isinstance(x, list) and all(
-            isinstance(keyword, dict) for keyword in x) else '')
-
-    # Preprocess platforms
-    games_df['platforms'] = games_df['platforms'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-    games_df['platforms_str'] = games_df['platforms'].apply(
-        lambda x: ' '.join([platform['name'] for platform in x]) if isinstance(x, list) and all(
-            isinstance(platform, dict) for platform in x) else '')
-
-    # Preprocess player_perspectives
-    games_df['player_perspectives'] = games_df['player_perspectives'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-    games_df['player_perspectives_str'] = games_df['player_perspectives'].apply(
-        lambda x: ' '.join([perspective['name'] for perspective in x]) if isinstance(x, list) and all(
-            isinstance(perspective, dict) for perspective in x) else '')
-
-    for col in ['genres']:
-        games_df[col] = games_df[col].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-
-    games_df['genres_str'] = games_df['genres'].apply(
-        lambda x: ' '.join([genre['name'] for genre in x]) if isinstance(x, list) and all(
-            isinstance(genre, dict) for genre in x) else '')
-
-    games_df['summary_and_genres'] = (games_df['summary'] + ' ' +
-                                      (games_df['genres_str'] * genre_weight) + ' ' +
-                                      (games_df['involved_companies_str'] * company_weight) + ' ' +
-                                      (games_df['keywords_str'] * keyword_weight) + ' ' +
-                                      (games_df['platforms_str'] * platform_weight) + ' ' +
-                                      (games_df['player_perspectives_str'] * perspective_weight))
+    for col in list_columns:
+        if col != 'genres':
+            games_df['summary_and_genres'] = games_df['summary_and_genres'] + ' ' + games_df[f"{col}_weighted"]
 
     return games_df
 
 
-# Preprocess the data and save to a file
-# games_df = pd.read_csv('game_data.csv')
-# games_df = preprocess_data(games_df)
-# games_df.to_csv('preprocessed_game_data.csv', index=False)
-
-
-def generate_features(games_df):
-    vectorizer = TfidfVectorizer(stop_words='english', max_features=30000)
+def precompute_similarity_scores():
+    games_df = get_games_df()
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=13000)
     summary_genre_matrix = vectorizer.fit_transform(games_df['summary_and_genres'])
 
-    return summary_genre_matrix
+    similarity_scores = cosine_similarity(summary_genre_matrix)
+
+    with open('similarity_scores.pkl', 'wb') as f:
+        pickle.dump(similarity_scores, f)
+
+    return similarity_scores
 
 
-def recommend_games(user_game_ids, games_df, summary_genre_matrix, top_n=5, min_rating=60, min_rating_count=20):
+@lru_cache(maxsize=None)
+def get_similarity_scores():
+    if not os.path.exists('similarity_scores.pkl'):
+        similarity_scores = precompute_similarity_scores()
+    else:
+        with open('similarity_scores.pkl', 'rb') as f:
+            similarity_scores = pickle.load(f)
+
+    return similarity_scores
+
+
+def generate_features(user_games):
+    games_df = get_games_df()
+    user_games_df = games_df[games_df['id'].isin(user_games)]
+    remaining_games = games_df[~games_df['name'].isin(user_games)]
+    sampled_games = pd.concat([user_games_df, remaining_games.head(15000 - len(user_games))], ignore_index=True)
+
+    vectorizer = TfidfVectorizer(stop_words='english', max_features=13000)
+    summary_genre_matrix = vectorizer.fit_transform(sampled_games['summary_and_genres'])
+
+    return summary_genre_matrix, sampled_games
+
+def recommend_games(user_game_ids, top_n=5, min_rating=60, min_rating_count=20):
+    games_df = get_games_df()
+    similarity_scores = get_similarity_scores()
+
     user_game_indices = games_df[games_df['id'].isin(user_game_ids)].index
-    user_game_matrix = summary_genre_matrix[user_game_indices]
 
-    similarity_scores = cosine_similarity(user_game_matrix, summary_genre_matrix)
-    similarity_scores = similarity_scores.mean(axis=0)
+    avg_similarity_scores = similarity_scores[user_game_indices].mean(axis=0)
 
-    # Create a mask to exclude user_games, games with rating less than min_rating, and games with rating count less than min_rating_count from the recommendations
     mask = (~games_df['id'].isin(user_game_ids)) & (games_df['total_rating'] >= min_rating) & (games_df['total_rating_count'] >= min_rating_count)
-    filtered_similarity_scores = similarity_scores[mask]
+    filtered_similarity_scores = avg_similarity_scores[mask]
 
-    most_similar_indices = (-filtered_similarity_scores).argsort()[:top_n]
-    most_similar_indices = games_df[mask].iloc[most_similar_indices].index
+    most_similar_indices = np.argpartition(-filtered_similarity_scores, top_n)[:top_n]
+    most_similar_indices = most_similar_indices[np.argsort(-filtered_similarity_scores[most_similar_indices])]
 
-    return games_df.loc[most_similar_indices, ['name', 'id', 'total_rating', 'total_rating_count']]
+    recommended_games = games_df.loc[mask].iloc[most_similar_indices]
 
+    return recommended_games[['name', 'id', 'total_rating', 'total_rating_count']]
 
 
 
 def main(user_games):
-    games_df = pd.read_csv('preprocessed_game_data.csv')
-
-    # Data has been already preprocessed and saved to game_data.csv, so we can now skip the preprocessing step
-    # games_df = preprocess_data(games_df)
-
-    games_df = games_df.sample(frac=1, random_state=42).reset_index(drop=True)
-
-    # Extract user_games from the games_df
-    user_games_df = games_df[games_df['id'].isin(user_games)]
-
-    # Exclude user_games from the games_df
-    remaining_games = games_df[~games_df['name'].isin(user_games)]
-
-    # Sample the remaining_games
-    sampled_games = remaining_games.head(20000 - len(user_games))
-
-    # Concatenate user_games_df and the sampled_games
-    sampled_games = pd.concat([user_games_df, sampled_games], ignore_index=True)
-
-    # Generate features for the sampled_games
-    summary_genre_matrix = generate_features(sampled_games)
-
-    # Recommend games based on the user_games
-    recommended_games = recommend_games(user_games, sampled_games, summary_genre_matrix, top_n=8)
+    recommended_games = recommend_games(user_games, top_n=8)
     print('Recommended games:')
     print(recommended_games)
 
-    # store game IDs in a list
-    game_ids = recommended_games['id'].tolist()
-    return game_ids
-
+    return recommended_games['id'].tolist()
 
 if __name__ == '__main__':
     user_games_list = list(map(int, sys.argv[1].split(",")))

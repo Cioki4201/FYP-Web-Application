@@ -229,5 +229,19 @@ public class IGDBService implements IGDBRepo {
         return new ResponseEntity<>(returnBody.toString(), HttpStatus.OK);
     }
 
+    public ResponseEntity<String> searchByGenre(String genre) throws UnirestException {
+        // replace spaces with underscores to match IGDB genre format
+        genre = genre.replace(" ", "_");
+
+        // Create the query to search games by genre
+        String query = "fields name, cover, first_release_date, total_rating_count; where genres.name ~ \"" + genre + "\"* & first_release_date != n & total_rating_count > 10; sort first_release_date desc; limit 50;";
+
+        // Make a request to the IGDB API
+        JSONArray returnBody = request.post(query, "games");
+
+        // Convert the JSONArray to a String and wrap it in a ResponseEntity with HttpStatus.OK
+        return new ResponseEntity<>(returnBody.toString(), HttpStatus.OK);
+    }
+
 
 }

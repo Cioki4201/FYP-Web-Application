@@ -133,7 +133,6 @@ export default {
         const gameRecommendations = await coverResponse.json();
         this.recommendedGames = gameRecommendations;
 
-        console.log(this.recommendedGames);
       } catch (error) {
         console.log(error);
       }

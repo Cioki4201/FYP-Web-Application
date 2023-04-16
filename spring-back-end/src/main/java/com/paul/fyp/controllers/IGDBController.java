@@ -51,4 +51,9 @@ public class IGDBController {
     public ResponseEntity<String> getCoverAndNames(@RequestBody GamesIdsDTO gamesIdsDTO) throws UnirestException {
         return igdbService.getGameNameCoverAndId(gamesIdsDTO);
     }
+
+    @GetMapping("/genres/{genre}")
+    public ResponseEntity<String> getGamesByGenre(@PathVariable("genre") String genre) throws UnirestException {
+        return igdbService.searchByGenre(genre);
+    }
 }

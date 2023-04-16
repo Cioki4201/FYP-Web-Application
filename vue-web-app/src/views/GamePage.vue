@@ -305,14 +305,12 @@ export default {
     this.gameDetails.similarGames = this.gameDetails.similarGames.filter(game => game.hasOwnProperty("cover"));
 
     for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
-      console.log(this.gameDetails.similarGames[i].cover.image_id)
       this.gameDetails.similarGames[i].cover =
         "https://images.igdb.com/igdb/image/upload/t_cover_big/" +
         this.gameDetails.similarGames[i].cover.image_id +
         ".jpg";
     }
 
-    console.log("Similar Games Done")
 
     try {
       // Processing Video url(s)

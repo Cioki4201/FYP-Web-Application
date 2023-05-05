@@ -94,5 +94,21 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(gamesJSON.toString());
     }
 
+    // Get user's count of games
+    @GetMapping(value = "/{username}/count", produces = MediaType.APPLICATION_JSON_VALUE)
+    public int getUserCount(@PathVariable("username") String username) {
+        User user = userRepository.findByUsername(username).get();
+
+        return user.getGameCount();
+    }
+
+    // Check if game is in user's list
+    @GetMapping(value = "/{username}/has/{gameID}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public boolean hasGame(@PathVariable("username") String username, @PathVariable("gameID") String gameID) {
+        User user = userRepository.findByUsername(username).get();
+
+        return user.hasGame(gameID);
+    }
+
 
 }

@@ -1,25 +1,46 @@
 package com.paul.fyp.services;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.paul.fyp.models.AccessTokenRetriever;
 import com.paul.fyp.models.IGDBRequest;
 import com.paul.fyp.models.dto.CoverIDsDTO;
 import com.paul.fyp.models.dto.GamesIdsDTO;
 import com.paul.fyp.repository.IGDBRepo;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
 public class IGDBService implements IGDBRepo {
 
-    IGDBRequest request = new IGDBRequest("h8e4zy4n8gdygc69d4kfz4qsn9ymn3", "Bearer 3x7wa4db826lpwqiithvvvzg77ebkg");
+    @Autowired
+    AccessTokenRetriever accessTokenRetriever;
 
+    IGDBRequest request;
+
+    @PostConstruct
+    public void init() {
+        accessTokenRetriever.addObserver(accessToken -> {
+            request = new IGDBRequest("h8e4zy4n8gdygc69d4kfz4qsn9ymn3", accessToken);
+        });
+
+        CompletableFuture<String> accessTokenFuture = accessTokenRetriever.getAccessToken();
+        accessTokenFuture.thenAccept(accessToken -> {
+            if (request == null) {
+                request = new IGDBRequest("h8e4zy4n8gdygc69d4kfz4qsn9ymn3", accessToken);
+            }
+        }).join();
+    }
     @Override
     public JSONArray gameSearch(String searchQuery) throws UnirestException {
         searchQuery = "search \"" + searchQuery + "\"; fields name, cover; limit 70;";

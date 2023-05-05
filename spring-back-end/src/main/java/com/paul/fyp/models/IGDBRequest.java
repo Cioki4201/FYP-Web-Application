@@ -55,6 +55,8 @@ public class IGDBRequest {
         return new JSONArray(jsonString);
     }
 
-
+    public void updateAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
 
 }

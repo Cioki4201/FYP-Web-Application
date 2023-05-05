@@ -31,9 +31,20 @@
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn v-bind="props" class="add-game-btn">
-                  <font-awesome-icon icon="plus" />
-                   Add Game to MyList
+                  <span v-if="!inList">
+                    <font-awesome-icon icon="plus" />
+                     Add Game to MyList
+                  </span>
+
+                  <span v-if="inList">
+                    <font-awesome-icon icon="arrow-right-arrow-left" />
+                    Change Category
+                  </span>
                 </v-btn>
+                <br>
+                <v-btn @click="removeGame(this.gameID)" class="removeButton" v-if="inList">
+                    <font-awesome-icon icon="trash" /> Remove Game 
+                  </v-btn>
               </template>
               <v-list>
                 <v-list-item
@@ -179,6 +190,8 @@ export default {
         { value: 4, label: "On Hold" },
       ],
 
+      inList: false,
+
       // ALERT DATA
       alertMessage: "",
       alertType: "",
@@ -204,6 +217,49 @@ export default {
     handlePopstate() {
       // Force reload when user uses the back or forward button
       window.location.reload();
+    },
+
+    async removeGame(gameID) {
+      // Get username
+      const signInObj = JSON.parse(localStorage.getItem("signInObj"));
+      const username = signInObj.username;
+
+      const response = await fetch(
+        "http://localhost:4040/api/users/" +
+          username +
+          "/remove_game/" +
+          gameID,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = await response.text();
+      this.showAlert(data, "info", "trash");
+      this.inList = false;
+    },
+
+    isInList() {
+      // Check if the game is in the user's list using this API endpoint "http://localhost:4040/api/users/*USERNAME*/has/*GAME ID*"
+      // If the game is in the user's list, set inList to true
+
+      // Get the current user's username from the session storage
+      const signInObj = JSON.parse(localStorage.getItem("signInObj"));
+      const username = signInObj.username;
+      // Check if the game is in the user's list
+      fetch(
+        "http://localhost:4040/api/users/" + username + "/has/" + this.gameID
+      ).then((response) => {
+        // The response is a boolean, store it in inList
+        response.text().then((data) => {
+          if (data == "true") {
+            this.inList = true;
+          } else {
+            this.inList = false;
+          }
+        });
+      });
     },
 
     // function that gets game info from the API and returns it as a JSON object
@@ -261,6 +317,7 @@ export default {
           // print the response string to the console
           const responseString = await response.text();
           this.showAlert(responseString, "success", "check");
+          this.inList = true;
         } else {
           this.showAlert("Error adding game to your list.", "error", "xmark");
         }
@@ -289,7 +346,6 @@ export default {
       console.log("No Artworks");
     }
 
-
     try {
       for (let i = 0; i < this.gameDetails.screenshots.length; i++) {
         this.gameDetails.screenshots[i] =
@@ -302,7 +358,9 @@ export default {
     }
 
     // From similarGames, remove the games that have no cover image id
-    this.gameDetails.similarGames = this.gameDetails.similarGames.filter(game => game.hasOwnProperty("cover"));
+    this.gameDetails.similarGames = this.gameDetails.similarGames.filter(
+      (game) => game.hasOwnProperty("cover")
+    );
 
     for (let i = 0; i < this.gameDetails.similarGames.length; i++) {
       this.gameDetails.similarGames[i].cover =
@@ -310,7 +368,6 @@ export default {
         this.gameDetails.similarGames[i].cover.image_id +
         ".jpg";
     }
-
 
     try {
       // Processing Video url(s)
@@ -323,7 +380,7 @@ export default {
       console.log("No Videos");
     }
 
-    console.log("Videos Done")
+    console.log("Videos Done");
 
     // Round Rating to no decimal places
     this.gameDetails.rating = Math.round(this.gameDetails.rating);
@@ -331,6 +388,9 @@ export default {
     console.log(this.gameDetails);
 
     this.dataLoaded = true;
+
+    // Check if game is in user's list
+    this.isInList();
   },
 
   mounted() {
@@ -359,13 +419,13 @@ export default {
       if (this.gameDetails && this.gameDetails.rating) {
         const gameRating = this.gameDetails.rating;
 
-        if (gameRating > 80) {
+        if (gameRating >= 80) {
           return "background-color: green; box-shadow: 0 0 15px green;";
-        } else if (gameRating > 60) {
+        } else if (gameRating >= 60) {
           return "background-color: yellow; box-shadow: 0 0 15px yellow;";
-        } else if (gameRating > 40) {
+        } else if (gameRating >= 40) {
           return "background-color: orange; box-shadow: 0 0 15px orange;";
-        } else if (gameRating < 20) {
+        } else if (gameRating <= 20) {
           return "background-color: red; box-shadow: 0 0 15px red;";
         }
       } else {
@@ -396,10 +456,6 @@ export default {
   margin-left: 0.4rem;
   text-shadow: 0 0 4px rgba(0, 0, 0, 1);
   color: white;
-}
-
-.add-game-btn {
-  border-radius: ;
 }
 
 .artwork-background {
@@ -615,5 +671,11 @@ export default {
   text-align: center;
   color: white;
   text-shadow: 0 0 10px rgba(255, 136, 0, 0.7);
+}
+
+.removeButton {
+  background-color: #f44336;
+  color: white;
+  border-radius: 10px;
 }
 </style>

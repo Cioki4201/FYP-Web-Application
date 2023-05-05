@@ -198,4 +198,22 @@ public class User {
         }
     }
 
+    // Get total count of games
+    public int getGameCount() {
+        int total = 0;
+        for (int i = 0; i < 5; i++) {
+            total += games.get(i).size();
+        }
+        return total;
+    }
+
+    public boolean hasGame(String gameID) {
+        for (int i = 0; i < 5; i++) {
+            if (games.get(i).contains(gameID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

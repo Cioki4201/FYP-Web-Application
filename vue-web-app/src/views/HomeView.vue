@@ -13,7 +13,12 @@
 
     <div class="game-recommendations">
       <h1>Recommendations for you</h1>
-      <v-container v-if="this.loginStatus">
+      <!-- If the user has less than 6 games in their list, do not show recommendations -->
+      <v-container v-if="this.loginStatus && !enoughGames">
+        <h2>Add <span style="color: orange">{{ 6 - this.gameCount }}</span> more games to your list to start receiving personalised recommendations!</h2>
+      </v-container>
+
+      <v-container v-else-if="this.loginStatus && this.enoughGames">
         <v-row>
           <v-col
             v-for="game in this.recommendedGames"
@@ -46,7 +51,6 @@
       :type="alertType"
       :icon="alertIcon"
     />
-
   </div>
 </template>
 
@@ -69,10 +73,12 @@ export default {
       alertType: "",
       alertIcon: "",
       alertMessage: "",
+      gameCount: 0,
+      enoughGames: false,
     };
   },
 
-  components: {  },
+  components: {},
 
   watch: {
     loginStatus: function (newVal, oldVal) {
@@ -91,6 +97,20 @@ export default {
         this.alertIcon = icon;
         this.alertMessage = message;
       });
+    },
+
+    async getUserGameCount() {
+      try {
+        let signInObj = JSON.parse(localStorage.getItem("signInObj"));
+        let currentUsername = signInObj.username;
+        const response = await fetch(
+          "http://localhost:4040/api/users/" + currentUsername + "/count"
+        );
+        const data = await response.json();
+        this.gameCount = data;
+      } catch (error) {
+        console.log(error);
+      }
     },
 
     goToGamePage(gameId) {
@@ -132,7 +152,6 @@ export default {
 
         const gameRecommendations = await coverResponse.json();
         this.recommendedGames = gameRecommendations;
-
       } catch (error) {
         console.log(error);
       }
@@ -144,6 +163,11 @@ export default {
     if (localStorage.getItem("signInObj")) {
       this.loginStatus = true;
       await this.getUserRecommendedGames();
+    }
+
+    await this.getUserGameCount();
+    if (this.gameCount >= 6) {
+      this.enoughGames = true;
     }
   },
 };

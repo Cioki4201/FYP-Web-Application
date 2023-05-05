@@ -4,9 +4,12 @@
 
   <v-main>
     <v-container class="my-container mx-auto my-6 w-400">
-      <v-avatar size="200" class="avatar mx-auto mb-2" color="#000000">
+      <!--
+        TO BE IMPLEMENTED (AVATARS / PROFILE PICTURES)
+        <v-avatar size="200" class="avatar mx-auto mb-2" color="#000000">
         <v-img src="https://cdn.vuetifyjs.com/images/lists/1.jpg"></v-img>
-      </v-avatar>
+      </v-avatar> -->
+      <h1 class="title">MY LIST</h1>
       <h1 class="mx-auto">@{{ username }}</h1>
     </v-container>
 
@@ -285,6 +288,19 @@ export default {
 
     this.username = this.$route.params.username; // set username from route params
 
+    // check if the username from the signInObj matches the username in the route params
+    if (
+      JSON.parse(localStorage.getItem("signInObj")).username != this.username
+    ) {
+
+      this.$router.push("/mylist/" + JSON.parse(localStorage.getItem("signInObj")).username);
+
+      // wait a second and reload the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    }
+
     await this.getUserData();
 
     for (let i = 0; i < this.tabs.length; i++) {
@@ -305,7 +321,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 280px;
+  width: 400px;
 }
 
 .avatar {
@@ -350,6 +366,14 @@ export default {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.title {
+  color: #fff;
+  font-size: 9vmin;
+  margin-bottom: 10px;
+  font-family: "Bungee Spice", cursive;
+  text-shadow: 0 0 16px rgba(255, 98, 0, 0.7);
 }
 </style>
   

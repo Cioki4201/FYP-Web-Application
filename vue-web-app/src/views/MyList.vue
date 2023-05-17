@@ -3,7 +3,7 @@
   <AutoFadeAlert :message="alertMessage" :type="alertType" :icon="alertIcon" />
 
   <v-main>
-    <v-container class="my-container mx-auto my-6 w-400">
+    <v-container class="my-container my-6">
       <!--
         TO BE IMPLEMENTED (AVATARS / PROFILE PICTURES)
         <v-avatar size="200" class="avatar mx-auto mb-2" color="#000000">
@@ -83,7 +83,7 @@
           <v-window-item value="completed">
             <!-- If there are no games in this tab, display a message -->
             <div v-if="tabs[2].games.length == 0" class="text-center">
-              <h3 class="text-center">No games Dropped</h3>
+              <h3 class="text-center">No games Completed</h3>
             </div>
 
             <v-card
@@ -320,8 +320,8 @@ export default {
 .my-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 400px;
+  text-align: center;
+  width: 700px;
 }
 
 .avatar {
@@ -370,6 +370,7 @@ export default {
 
 .title {
   color: #fff;
+  width: 100%;
   font-size: 9vmin;
   margin-bottom: 10px;
   font-family: "Bungee Spice", cursive;
